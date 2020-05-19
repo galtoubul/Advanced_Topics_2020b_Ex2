@@ -8,6 +8,7 @@ WeightBalanceCalculator::BalanceStatus WeightBalanceCalculator::tryOperation(cha
 }
 
 int WeightBalanceCalculator::readShipPlan(const std::string& full_path_and_file_name){
-
+    if (!full_path_and_file_name.empty())
+        return 0;
     return 0;
 }

@@ -14,9 +14,17 @@ class Registrar{
     vector<function<unique_ptr<AbstractAlgorithm>()>> factoryVec;
 
 public:
-    void registerAlgorithmFactory(const function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory);
+    void registerAlgorithmFactory(const function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory) {
+        factoryVec.push_back(algorithmFactory);
+    }
 
-    vector<function<unique_ptr<AbstractAlgorithm>()>>& getFactoryVec();
+    static Registrar& getRegistrar(){
+        return registrar;
+    }
 
-    static Registrar& getRegistrar();
+    vector<function<unique_ptr<AbstractAlgorithm>()>>& getAlgorithmFactoryVector(){
+        return factoryVec;
+    }
+
+    vector<unique_ptr<AbstractAlgorithm>> getAlgorithmVector();
 };

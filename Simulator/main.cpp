@@ -11,6 +11,7 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::unique_ptr;
+using std::pair;
 #define NOT_LEGAL -1
 #define LEGAL 1
 
@@ -33,7 +34,6 @@ struct DLCloser{
     }
 };
 
-Registrar Registrar::registrar;
 
 int main() {
     cout << "Welcome to Stowage Algorithm Simulator" << endl;
@@ -48,12 +48,15 @@ int main() {
 
     Simulator simulator;
 
-    auto& registrar = Registrar::getRegistrar();
-    vector<std::function<std::unique_ptr<AbstractAlgorithm>()>>& factoryVec = registrar.getFactoryVec();
-
-    for(auto& algorithmFactory : factoryVec) {
-        for (int j = 1; j <= 2; ++j) {
-            simulator.initSimulation(algorithmFactory(), j);
+    string algName = "alg1";
+    vector<function<unique_ptr<AbstractAlgorithm>()>> algFactoryVec = Registrar::getRegistrar().getAlgorithmFactoryVector();
+    //vector<pair<string, unique_ptr<AbstractAlgorithm>>> algVecWithNames;
+    //algVecWithNames.emplace_back(std::make_pair(algName, algVec[0]));
+    cout << "after getting algorithmVec. Its size is: " << algFactoryVec.size() << endl;
+    for (int j = 1; j <= 2; ++j) {
+        for(auto& algFactory : algFactoryVec) {
+            cout << "travel's num = " << j << endl;
+            simulator.initSimulation(algFactory, j);
         }
     }
 

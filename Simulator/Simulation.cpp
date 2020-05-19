@@ -3,7 +3,8 @@
 #include <iostream>
 #include <filesystem>
 #include "Simulation.h"
-
+#include <cstddef>
+using std::function;
 using std::vector;
 using std::tuple;
 using std::get;
@@ -17,18 +18,24 @@ using std::endl;
 
 int Simulator::algorithmActionsCounter;
 size_t Simulator::currPortIndex;
+std::map<int, std::string> ErrorsInterface::errorsMap;
 
 inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<VVVC&>(shipPlan.getContainers()).clear();
     const_cast<vector<Port>&>(shipRoute.getPortsList()).clear();
 }
 
-void Simulator::initSimulation (unique_ptr<AbstractAlgorithm> algorithm, int travelNum){
+void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum){
+    cout << "inside initSimulation" <<  endl;
+    unique_ptr<AbstractAlgorithm> algorithm = algorithmFactory();
+    if(algorithm)   cout << "algorithm isn't nullptr" << endl;
+    else            cout << "algorithm is nullptr" << endl;
+
     string travelName = "Travel" + std::to_string(travelNum);
 
     errorsFileName = "output" + string(1, std::filesystem::path::preferred_separator) +
                      "errors" + string(1, std::filesystem::path::preferred_separator);
-                     //travelName + "_" + std::to_string(algorithmNum) + ".errors.txt"; // TODO
+    //travelName + "_" + std::to_string(algorithmNum) + ".errors.txt"; // TODO
 
     string shipPlanPath = travelName +  std::string(1, std::filesystem::path::preferred_separator) + "Ship Plan.txt";
     string shipRoutePath = travelName + std::string(1, std::filesystem::path::preferred_separator) + "Route.txt";
@@ -85,6 +92,10 @@ void Simulator::initSimulation (unique_ptr<AbstractAlgorithm> algorithm, int tra
                  << " .The number of algorithm operations: " << algorithmActionsCounter << endl;*/
 
     clearData(this->shipPlan, this->shipRoute);
+}
+
+void Simulator::setWeightBalanceCalculator(WeightBalanceCalculator& _calculator){
+    this->calculator = _calculator;
 }
 
 int Simulator::getInput(const string& shipPlanFileName, const string& shipRouteFileName){

@@ -1,14 +1,13 @@
 #include "Registrar.h"
 
-void Registrar::registerAlgorithmFactory(const function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory) {
-    factoryVec.push_back(algorithmFactory);
+Registrar Registrar::registrar;
+
+vector<unique_ptr<AbstractAlgorithm>> Registrar::getAlgorithmVector(){
+    vector <unique_ptr<AbstractAlgorithm>> algorithmVec;
+    for(auto& algorithmFactory : factoryVec)
+        algorithmVec.push_back(algorithmFactory());
+
+    return algorithmVec;
 }
 
-vector<function<unique_ptr<AbstractAlgorithm>()>>& Registrar::getFactoryVec(){
-    return factoryVec;
-}
-
-Registrar& Registrar::getRegistrar() {
-    return registrar;
-}
 

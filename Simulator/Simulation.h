@@ -1,55 +1,56 @@
-    #pragma once
+#pragma once
 
-    #include <vector>
-    #include <tuple>
-    #include <string>
-    #include <memory>
-    #include "../Common/Parser.h"
-    #include <string>
-    #include "../Interfaces/WeightBalanceCalculator.h"
-    #include "../Interfaces/AbstractAlgorithm.h"
-    //#include "Registrar.h"
+#include <vector>
+#include <tuple>
+#include <string>
+#include <memory>
+#include <functional>
+#include "../Common/Parser.h"
+#include <string>
+#include "../Interfaces/WeightBalanceCalculator.h"
+#include "../Interfaces/AbstractAlgorithm.h"
+//#include "Registrar.h"
 
-    using std::vector;
-    using std::tuple;
-    using std::unique_ptr;
+using std::vector;
+using std::tuple;
+using std::unique_ptr;
 
-    class Simulator{
-        ShipPlan shipPlan;
-        ShipRoute shipRoute;
-        WeightBalanceCalculator calculator;
-        string errorsFileName;
+class Simulator{
+    ShipPlan shipPlan;
+    ShipRoute shipRoute;
+    WeightBalanceCalculator calculator;
+    string errorsFileName;
 
-    public:
-        static int algorithmActionsCounter;
+public:
+    static int algorithmActionsCounter;
 
-        static size_t currPortIndex;
+    static size_t currPortIndex;
 
-        Simulator() : shipPlan(), shipRoute() {}
+    Simulator() : shipPlan(), shipRoute() {}
 
-        void initSimulation (unique_ptr<AbstractAlgorithm> algorithm, int travelNum);
+    void initSimulation (std::function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum);
 
-        void setWeightBalanceCalculator(WeightBalanceCalculator& _calculator);
+    void setWeightBalanceCalculator(WeightBalanceCalculator& _calculator);
 
-        int getInput(const string& shipPlanFileName, const string& shipRouteFileName);
+    int getInput(const string& shipPlanFileName, const string& shipRouteFileName);
 
-        int startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString);
+    int startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString);
 
-        friend std::ostream& operator<<(std::ostream& out, const Simulator& simulator);
+    friend std::ostream& operator<<(std::ostream& out, const Simulator& simulator);
 
-        const ShipPlan& getShipPlan () const;
+    const ShipPlan& getShipPlan () const;
 
-        const ShipRoute& getShipRoute() const;
+    const ShipRoute& getShipRoute() const;
 
-        int freeSlotsInShip ();
+    int freeSlotsInShip ();
 
-        int checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName, const string& portSymbol, string& algorithmErrorString);
+    int checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName, const string& portSymbol, string& algorithmErrorString);
 
-        int checkLoadInstruction(int x, int y, int floor, Container* container, string& algorithmErrorString);
+    int checkLoadInstruction(int x, int y, int floor, Container* container, string& algorithmErrorString);
 
-        int checkUnloadInstruction(int x, int y, int floor, Container* container,
-                                   vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString);
+    int checkUnloadInstruction(int x, int y, int floor, Container* container,
+                               vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString);
 
-        void writeNotLegalOperation(const string&);
-    };
+    void writeNotLegalOperation(const string&);
+};
 

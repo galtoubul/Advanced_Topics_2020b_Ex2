@@ -7,6 +7,7 @@
 #include "ShipPlan.h"
 #include "../Interfaces/WeightBalanceCalculator.h"
 #include "../Interfaces/ErrorsInterface.h"
+#include "ISO6346.h"
 using std::ifstream;
 using std::ofstream;
 using std::tuple;

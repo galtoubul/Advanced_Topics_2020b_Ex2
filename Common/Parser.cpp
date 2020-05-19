@@ -223,15 +223,15 @@ void getPortFilesName(string& inputFileName, string& outputFileName, const strin
                      portId + '_' + std::to_string(portVisitNum) + ".instructions_for_cargo.txt";
 }
 
-int validateContainerId (const string& line){
-    const std::regex regex("\\s*[A-Z]{3}[UJZ][0-9]{7}\\s*");
-    if (!(std::regex_match(line, regex))){
-        //    CONTAINER_ERROR("id")
-        return (1 << 14);
-        //exit(EXIT_FAILURE);
-    }
-    return 0;
-}
+//int validateContainerId (const string& line){
+//    const std::regex regex("\\s*[A-Z]{3}[UJZ][0-9]{7}\\s*");
+//    if (!(std::regex_match(line, regex))){
+//        //    CONTAINER_ERROR("id")
+//        return (1 << 14);
+//        //exit(EXIT_FAILURE);
+//    }
+//    return 0;
+//}
 
 int validateWeight (const string& line){
     const std::regex regex("\\s*[0-9]*\\s*");
@@ -251,7 +251,7 @@ int validateContainersAwaitingAtPortLine (vector<string>& line) {
     }
     for (int i = 0; i < 3; ++i)
         trim(line[i]);
-    return (validateContainerId(line[0]) | validateWeight(line[1]) | checkIfValidPortId(line[2]));
+    return (ISO6346::isValidId(line[0]) | validateWeight(line[1]) | checkIfValidPortId(line[2]));
     //   return portInRoute(shipRoute, line[2]);
 }
 
