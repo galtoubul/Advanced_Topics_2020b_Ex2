@@ -34,8 +34,8 @@ void Simulator::initSimulation (const function<unique_ptr<AbstractAlgorithm>()>&
     string travelName = "Travel" + std::to_string(travelNum);
 
     errorsFileName = "output" + string(1, std::filesystem::path::preferred_separator) +
-                     "errors" + string(1, std::filesystem::path::preferred_separator);
-    //travelName + "_" + std::to_string(algorithmNum) + ".errors.txt"; // TODO
+                     "errors" + string(1, std::filesystem::path::preferred_separator) +
+                     travelName + "_" + algName + ".errors.txt";
 
     string shipPlanPath = travelName +  std::string(1, std::filesystem::path::preferred_separator) + "Ship Plan.txt";
     string shipRoutePath = travelName + std::string(1, std::filesystem::path::preferred_separator) + "Route.txt";
@@ -84,12 +84,12 @@ void Simulator::initSimulation (const function<unique_ptr<AbstractAlgorithm>()>&
     }
     //TODO: bad algo behavior = -1 in the travel-algorithm pair
 
-        if (errorsOfAlgorithm)
-            cout << travelName << " was ended with an error for algorithm " << algName
-                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
-        else
-            cout << travelName << " was ended successfully for algorithm " << algName
-                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
+    if (errorsOfAlgorithm)
+        cout << travelName << " was ended with an error for algorithm " << algName
+             << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
+    else
+        cout << travelName << " was ended successfully for algorithm " << algName
+             << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
 
     clearData(this->shipPlan, this->shipRoute);
 }
