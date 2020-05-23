@@ -25,10 +25,10 @@ inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<vector<Port>&>(shipRoute.getPortsList()).clear();
 }
 
-void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum){
+void Simulator::initSimulation (const function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, const string& algName, int travelNum){
     cout << "inside initSimulation" <<  endl;
     unique_ptr<AbstractAlgorithm> algorithm = algorithmFactory();
-    if(algorithm)   cout << "algorithm isn't nullptr" << endl;
+    if(algorithm)   cout << "algorithm " << algName << "isn't nullptr" << endl;
     else            cout << "algorithm is nullptr" << endl;
 
     string travelName = "Travel" + std::to_string(travelNum);
@@ -83,13 +83,13 @@ void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algor
         errorsFile.close();
     }
     //TODO: bad algo behavior = -1 in the travel-algorithm pair
-    /*
-        if (status == ERROR)
-            cout << travelName << " was ended with an error for algorithm" << algorithmNum
+
+        if (errorsOfAlgorithm)
+            cout << travelName << " was ended with an error for algorithm " << algName
                  << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
         else
-            cout << travelName << " was ended successfully for algorithm" << algorithmNum
-                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;*/
+            cout << travelName << " was ended successfully for algorithm " << algName
+                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
 
     clearData(this->shipPlan, this->shipRoute);
 }
