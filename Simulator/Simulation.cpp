@@ -25,7 +25,7 @@ inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<vector<Port>&>(shipRoute.getPortsList()).clear();
 }
 
-void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum){
+int Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum){
     cout << "inside initSimulation" <<  endl;
     unique_ptr<AbstractAlgorithm> algorithm = algorithmFactory();
     if(algorithm)   cout << "algorithm isn't nullptr" << endl;
@@ -53,7 +53,8 @@ void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algor
         errorsFile << "Travel errors occurred. Skipping travel.";
         errorsFile.close();
         clearData(this->shipPlan, this->shipRoute);
-        return;
+
+        return -1;
     }
 
     int errorsOfAlgorithm = 0;
@@ -76,22 +77,17 @@ void Simulator::initSimulation (function<unique_ptr<AbstractAlgorithm>()>& algor
                 errorsFile << ErrorsInterface::errorsMap[i] << "\n";
             }
         }
-        if ((errorsOfAlgorithm & (1 << 9)) > 0) {
+        if ((errorsOfAlgorithm & (1 << 19)) > 0) {
             errorsFile << algorithmErrorString;
+            errorsFile.close();
+            return -1;
         }
 
         errorsFile.close();
     }
-    //TODO: bad algo behavior = -1 in the travel-algorithm pair
-    /*
-        if (status == ERROR)
-            cout << travelName << " was ended with an error for algorithm" << algorithmNum
-                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
-        else
-            cout << travelName << " was ended successfully for algorithm" << algorithmNum
-                 << " .The number of algorithm operations: " << algorithmActionsCounter << endl;*/
 
     clearData(this->shipPlan, this->shipRoute);
+    return 0;
 }
 
 void Simulator::setWeightBalanceCalculator(WeightBalanceCalculator& _calculator){
@@ -228,6 +224,7 @@ void Simulator::writeNotLegalOperation(const string&){
 int Simulator::startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString) {
     Simulator::currPortIndex = 0;
     Simulator::algorithmActionsCounter = 0;
+
     int errors = 0;
     for (const Port &port : this->shipRoute.getPortsList()) {
         Simulator::currPortIndex++;

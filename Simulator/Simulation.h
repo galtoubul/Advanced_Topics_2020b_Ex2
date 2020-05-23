@@ -28,7 +28,7 @@ public:
 
     Simulator() : shipPlan(), shipRoute() {}
 
-    void initSimulation (std::function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum);
+    int initSimulation (std::function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, int travelNum);
 
     void setWeightBalanceCalculator(WeightBalanceCalculator& _calculator);
 

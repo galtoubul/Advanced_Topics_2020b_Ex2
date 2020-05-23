@@ -23,6 +23,9 @@ using std::cin;
 using std::endl;
 using std::unique_ptr;
 using std::pair;
+using std::get;
+using std::sort;
+
 #define NOT_LEGAL -1
 #define LEGAL 1
 namespace fs = std::filesystem;
@@ -73,6 +76,14 @@ void getPaths (int argc, char** argv, string& travelPath, string& algorithmPath,
     }
 }
 
+bool compareAlgoTuples(tuple<string,vector<int>,int,int> x, tuple<string,vector<int>,int,int> y){
+    if (get<3>(x) == get<3>(y)){
+        return (get<2>(x) < get<2>(y));
+    }
+    else{
+        return (get<3>(x) < get<3>(y));
+    }
+}
 
 int main(int argc, char** argv) {
 
@@ -93,17 +104,51 @@ int main(int argc, char** argv) {
 
     Simulator simulator;
 
+    ofstream simulationResults("simulation.results.csv"); //TODO: make sure the path is right
+    simulationResults << "RESULTS,";
+    for (int j =1; j<=2; ++j ){
+        simulationResults << "travel "+ to_string(j) +",";
+    }
+    simulationResults << "SUM,";
+    simulationResults << "NumErrors,";
+
+    vector<tuple<string,vector<int>,int,int>> outputVector;
+
     string algName = "alg1";
     vector<function<unique_ptr<AbstractAlgorithm>()>> algFactoryVec = Registrar::getRegistrar().getAlgorithmFactoryVector();
     //vector<pair<string, unique_ptr<AbstractAlgorithm>>> algVecWithNames;
     //algVecWithNames.emplace_back(std::make_pair(algName, algVec[0]));
     cout << "after getting algorithmVec. Its size is: " << algFactoryVec.size() << endl;
-    for (int j = 1; j <= 2; ++j) {
-        for(auto& algFactory : algFactoryVec) {
+    for(auto& algFactory : algFactoryVec) {
+        tuple<string,vector<int>,int,int> algoTuple;
+        get<0>(algoTuple) =  algorithmName;
+        int sum = 0;
+        int numErrors = 0;
+        for (int j = 1; j <= 2; ++j) {
             cout << "travel's num = " << j << endl;
-            simulator.initSimulation(algFactory, j);
+            int status = simulator.initSimulation(algFactory, j);
+            if (status == -1){
+                get<1>(algoTuple).push_back(-1);
+                numErrors += 1;
+            }
+            else{
+                sum += simulator.algorithmActionsCounter;
+                get<1>(algoTuple).push_back(simulator.algorithmActionsCounter);
+            }
         }
+        get<2>(algoTuple) << sum;
+        get<3>(algoTuple) << numErrors;
+        outputVector.push_back(algoTuple);
     }
-
+    sort(outputVector.begin(), outputVector.end(), compareAlgoTuples);
+    for (tuple<string,vector<int>,int,int> algoTuple : outputVector){
+        simulationResults << get<0>(algoTuple)+",";
+        for (int travelOpNum : get<1>(algoTuple)){
+            simulationResults << travelOpNum+",";
+        }
+        simulationResults << get<2>(algoTuple)+",";
+        simulationResults << get<3>(algoTuple)+"\n";
+    }
+    simulationResults.close();
     return EXIT_SUCCESS;
 }
