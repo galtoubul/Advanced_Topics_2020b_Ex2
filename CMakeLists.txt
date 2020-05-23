@@ -10,6 +10,7 @@ add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 add_executable(Advanced_Topics_2020b_Ex2
         Algorithm/_308394642_a.h        Algorithm/_308394642_a.cpp
         Common/Container.h              Common/Container.cpp
+        Common/ISO6346.h                Common/ISO6346.cpp
         Common/Parser.h                 Common/Parser.cpp
         Common/Port.h                   Common/Port.cpp
         Common/ShipPlan.h               Common/ShipPlan.cpp

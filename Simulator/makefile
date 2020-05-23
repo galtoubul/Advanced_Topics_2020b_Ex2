@@ -7,7 +7,7 @@ OBJS = main.o Simulation.o $(COMMON)/Parser.o $(COMMON)/ShipPlan.o $(COMMON)/Con
 $(COMMON)/ShipRoute.o $(COMMON)/Port.o $(COMMON)/WeightBalanceCalculator.o AlgorithmRegistration.o 
 
 EXEC = simulator
-CPP_COMP_FLAG = -std=c++2a -Wall -Wextra -Werror -pedantic-errors -DNDEBUG
+CPP_COMP_FLAG = -std=c++2a -Wall -Wextra -Werror -pedantic-errors -DNDEBUG -fPIC
 CPP_LINK_FLAG = -lstdc++fs -ldl -export-dynamic
 
 $(EXEC): $(OBJS)
