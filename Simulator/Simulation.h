@@ -16,19 +16,21 @@ using std::tuple;
 using std::unique_ptr;
 
 class Simulator{
+
+public:
     ShipPlan shipPlan;
     ShipRoute shipRoute;
     WeightBalanceCalculator calculator;
+
     string errorsFileName;
 
-public:
     static int algorithmActionsCounter;
 
     static size_t currPortIndex;
 
     Simulator() : shipPlan(), shipRoute() {}
 
-    void initSimulation (const std::function<unique_ptr<AbstractAlgorithm>()>& algorithmFactory, const string& algName, int travelNum);
+//    int initSimulation (std::pair<std::string, unique_ptr<AbstractAlgorithm>> algorithm, int travelNum);
 
     void setWeightBalanceCalculator(WeightBalanceCalculator& _calculator);
 
