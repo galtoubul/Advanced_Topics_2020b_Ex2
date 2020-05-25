@@ -380,3 +380,17 @@ void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& i
         exit(EXIT_FAILURE);
     }
 }
+
+int findCurrPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int visitNum){
+    int counter = 0;
+    int currPortIndex = -1;
+    for (const Port& port : shipRoute.getPortsList()){
+        currPortIndex++;
+        if (portSymbol == port.Port::getPortId()){
+            counter++;
+            if (counter == visitNum)
+                break;
+        }
+    }
+    return currPortIndex;
+}

@@ -32,3 +32,5 @@ int findPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int curr
 vector<Container*> orderContainersByDest(vector<Container*>& containersAwaitingAtPort, ShipRoute& shipRoute, int currPortIndex);
 
 void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& instructions);
+
+int findCurrPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int visitNum);

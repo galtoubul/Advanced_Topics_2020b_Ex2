@@ -23,4 +23,4 @@ add_executable(Advanced_Topics_2020b_Ex2
         Simulator/AlgorithmRegistration.cpp
         Simulator/main.cpp
         Simulator/Registrar.h           Simulator/Registrar.cpp
-        Simulator/Simulation.h          Simulator/Simulation.cpp)
+        Simulator/Simulation.h          Simulator/Simulation.cpp Algorithm/_308394642_b.cpp Algorithm/_308394642_b.h)
