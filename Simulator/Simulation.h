@@ -50,6 +50,9 @@ public:
 
     int checkLoadInstruction(int x, int y, int floor, Container* container, string& algorithmErrorString);
 
+    int checkMoveInstruction(int x1, int y1, int floor1, int x2, int y2, int floor2, Container* container,
+                             string& algorithmErrorString);
+
     int checkUnloadInstruction(int x, int y, int floor, Container* container,
                                vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString);
 

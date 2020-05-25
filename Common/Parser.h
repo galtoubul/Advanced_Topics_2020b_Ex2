@@ -11,7 +11,7 @@
 using std::ifstream;
 using std::ofstream;
 using std::tuple;
-#define INSTRUCTION tuple<char,string,int,int,int>
+#define INSTRUCTION tuple<char,string,int,int,int,int,int,int>
 //#define REJECT 'R'
 
 namespace Parser{

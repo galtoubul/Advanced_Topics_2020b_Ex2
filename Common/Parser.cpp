@@ -363,7 +363,12 @@ void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& i
             split(temp, line, ',');
             if(temp.size() < 5)
                 continue;
-            instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]));
+            if(temp.size() == 5)
+                instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]), -1, -1, -1);
+            if(temp.size() == 8)
+                instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]),
+                   stoi(temp[4]), stoi(temp[5]), stoi(temp[6]), stoi(temp[7]));
+
         }
         outputFile.close();
     } else {

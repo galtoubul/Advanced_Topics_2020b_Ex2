@@ -130,6 +130,37 @@ int Simulator::checkLoadInstruction(int x, int y, int floor, Container* containe
     }
 }
 
+int Simulator::checkMoveInstruction(int x1, int y1, int floor1, int x2, int y2, int floor2, Container* container, string& algorithmErrorString){
+    if (shipPlan.getContainers()[x1][y1][floor1]->isFutile()){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor1, x1, y1, "this location is blocked");
+        return ERROR;
+    } else if (floor1 != (int)shipPlan.getContainers()[x1][y1].size() - 1 && shipPlan.getContainers()[x1][y1][floor1 + 1] != nullptr){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor1, x1, y1, "there are containers above the unloaded container");
+        return ERROR;
+    } else if (calculator.tryOperation('U', container->getWeight(), x1, y1) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unload", container->getId(), floor1, x1, y1, "the operation isn't approved by the weight balance calculator");
+        return ERROR;
+    } else if(shipPlan.getContainers()[x2][y2][floor2] != nullptr && shipPlan.getContainers()[x2][y2][floor2]->isFutile()){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "this location is blocked");
+        return ERROR;
+    } else if (shipPlan.getContainers()[x2][y2][floor2] != nullptr && !shipPlan.getContainers()[x2][y2][floor2]->isFutile()){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "this location is occupied by another container");
+        return ERROR;
+    }else if (shipPlan.getContainers()[x2][y2][floor2 - 1] == nullptr){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "there isn't any container under the loaded container");
+        return ERROR;
+    } else if (calculator.tryOperation('L', container->getWeight(), x2, y2) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor2, x2, y2, "the operation isn't approved by the weight balance calculator");
+        return ERROR;
+    }
+    else{
+        this->shipPlan.setContainers(x2, y2, floor2, container);
+        container->setLocation(x2, y2, floor2);
+        this->shipPlan.setContainers(x1, y1, floor1, nullptr);
+        return VALID;
+    }
+}
+
 int Simulator::checkUnloadInstruction(int x, int y, int floor, Container* container, vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString){
     if (shipPlan.getContainers()[x][y][floor]->isFutile()){
         algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "this location is blocked");
@@ -137,7 +168,7 @@ int Simulator::checkUnloadInstruction(int x, int y, int floor, Container* contai
     } else if (floor != (int)shipPlan.getContainers()[x][y].size() - 1 && shipPlan.getContainers()[x][y][floor + 1] != nullptr){
         algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "there are containers above the unloaded container");
         return ERROR;
-    } else if (calculator.tryOperation('L', container->getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
+    } else if (calculator.tryOperation('U', container->getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
         algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "the operation isn't approved by the weight balance calculator");
         return ERROR;
     }
@@ -161,8 +192,8 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
     for (INSTRUCTION instruction : instructions) {
         char instructionType;
         string containerId;
-        int x, y, floor;
-        std::tie(instructionType, containerId, floor, x, y) = instruction;
+        int x1, y1, floor1, x2, y2, floor2;
+        std::tie(instructionType, containerId, floor1, x1, y1, floor2, x2, y2) = instruction;
 
         Container *container = nullptr;
         if (instructionType == 'R')
@@ -180,21 +211,33 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
             }
             containersAwaitingAtPort.erase(containersAwaitingAtPort.begin()+locInVec);
             if (container == nullptr) {
-                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", containerId, floor, x, y, "this container isn't exist at "+currPortSymbol);
+                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", containerId, floor1, x1, y1, "this container isn't exist at "+currPortSymbol);
                 return ERROR;
             }
-            if (checkLoadInstruction(x, y, floor, container, algorithmErrorString) == ERROR)
+            if (checkLoadInstruction(x1, y1, floor1, container, algorithmErrorString) == ERROR)
                 return ERROR;
             continue;
         }
         else if (instructionType == 'U'){
             algorithmActionsCounter++;
-            container = shipPlan.getContainers()[x][y][floor];
+            container = shipPlan.getContainers()[x1][y1][floor1];
             if (container == nullptr) {
-                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", containerId, floor, x, y,"this container isn't exist at Ship");
+                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", containerId, floor1, x1, y1,"this container isn't exist at Ship");
                 return ERROR;
             }
-            if (checkUnloadInstruction(x, y, floor, container, containersAwaitingAtPort, algorithmErrorString) == ERROR)
+            if (checkUnloadInstruction(x1, y1, floor1, container, containersAwaitingAtPort, algorithmErrorString) == ERROR)
+                return ERROR;
+        }
+        else if(instructionType == 'M'){
+
+            algorithmActionsCounter++;
+
+            container = shipPlan.getContainers()[x1][y1][floor1];
+            if (container == nullptr) {
+                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1,"this container isn't exist at Ship");
+                return ERROR;
+            }
+            if (checkMoveInstruction(x1, y1, floor1, x2, y2, floor2, container, algorithmErrorString) == ERROR)
                 return ERROR;
         }
     }
