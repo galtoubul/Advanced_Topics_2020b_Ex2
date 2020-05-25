@@ -11,6 +11,7 @@
 using std::ifstream;
 using std::ofstream;
 using std::tuple;
+//#define INSTRUCTION tuple<char,string,int,int,int>
 #define INSTRUCTION tuple<char,string,int,int,int,int,int,int>
 //#define REJECT 'R'
 
@@ -22,7 +23,6 @@ namespace Parser{
 
 int readContainersAwaitingAtPort (const string& inputFileName, vector<Container*>& containersAwaitingAtPort, bool isFinalPort, const ShipPlan& shipPlan, const ShipRoute& shipRoute, int currPortIndex);
 
-void writeInstructionsToFile(vector<INSTRUCTION>& instructions, ofstream& instructionsForCargoFile);
 void writeInstructionsToFile(vector<INSTRUCTION>& instructions, ofstream& instructionsForCargoFile);
 
 void getPortFilesName(string& inputFileName, string& outputFileName, const string& portId, const int portVisitNum, const string& travelName);

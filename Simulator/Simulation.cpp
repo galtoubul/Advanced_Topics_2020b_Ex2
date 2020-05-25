@@ -185,6 +185,88 @@ inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
     return s;
 }
 
+//int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName,
+//                                             const string& currPortSymbol, string& algorithmErrorString){
+//    vector<INSTRUCTION> instructions;
+//    getInstructionsForPort(outputFileName, instructions);
+//    for (INSTRUCTION instruction : instructions) {
+//        char instructionType;
+//        string containerId;
+//        int x1, y1, floor1;
+//        std::tie(instructionType, containerId, floor1, x1, y1) = instruction;
+//
+//        Container *container = nullptr;
+//        if (instructionType == 'R')
+//            continue;
+//        else if (instructionType == 'L'){
+//            algorithmActionsCounter++;
+//            vector<Container*> currContainersAwaitingAtPort = containersAwaitingAtPort;
+//            int locInVec = -1;
+//            for (Container *_container : currContainersAwaitingAtPort) {
+//                locInVec++;
+//                if (_container->getId() == ltrim(containerId)) {
+//                    container = _container;
+//                    break;
+//                }
+//            }
+//            containersAwaitingAtPort.erase(containersAwaitingAtPort.begin()+locInVec);
+//            if (container == nullptr) {
+//                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", containerId, floor1, x1, y1, "this container isn't exist at "+currPortSymbol);
+//                return ERROR;
+//            }
+//            if (checkLoadInstruction(x1, y1, floor1, container, algorithmErrorString) == ERROR)
+//                return ERROR;
+//            continue;
+//        }
+//        else if (instructionType == 'U'){
+//            algorithmActionsCounter++;
+//            container = shipPlan.getContainers()[x1][y1][floor1];
+//            if (container == nullptr) {
+//                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", containerId, floor1, x1, y1,"this container isn't exist at Ship");
+//                return ERROR;
+//            }
+//            if (checkUnloadInstruction(x1, y1, floor1, container, containersAwaitingAtPort, algorithmErrorString) == ERROR)
+//                return ERROR;
+//        }
+////        else if(instructionType == 'M'){
+////
+////            algorithmActionsCounter++;
+////
+////            container = shipPlan.getContainers()[x1][y1][floor1];
+////            if (container == nullptr) {
+////                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1,"this container isn't exist at Ship");
+////                return ERROR;
+////            }
+////            if (checkMoveInstruction(x1, y1, floor1, x2, y2, floor2, container, algorithmErrorString) == ERROR)
+////                return ERROR;
+////        }
+//    }
+//
+//    for (Container* _container : containersAwaitingAtPort) {
+//        if (findPortIndex(shipRoute, currPortSymbol, currPortIndex) == NOT_IN_ROUTE)
+//            continue;
+//        if (_container->getDestination() != currPortSymbol){
+//            if(freeSlotsInShip() > 0){
+//                algorithmErrorString = ErrorsInterface::buildContainerForgottenError(currPortSymbol);
+//                return ERROR;
+//            }
+//        }
+//    }
+//
+//    for (int x = 0; x < this->shipPlan.getPivotXDimension(); x++){
+//        for (int y = 0; y < this->shipPlan.getPivotYDimension(); y++){
+//            for (int floor = 0; floor < this->shipPlan.getFloorsNum(); floor++){
+//                if (this->shipPlan.getContainers()[x][y][floor] != nullptr &&
+//                    this->shipPlan.getContainers()[x][y][floor]->getDestination() == currPortSymbol){
+//                    algorithmErrorString = ErrorsInterface::buildContainerWasntDroppedError(currPortSymbol);
+//                    return ERROR;
+//                }
+//            }
+//        }
+//    }
+//    return VALID;
+//}
+
 int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName,
                                              const string& currPortSymbol, string& algorithmErrorString){
     vector<INSTRUCTION> instructions;
@@ -266,7 +348,6 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
     }
     return VALID;
 }
-
 
 void Simulator::writeNotLegalOperation(const string&){
     //TODO: write func
