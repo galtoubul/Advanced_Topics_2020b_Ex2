@@ -166,14 +166,18 @@ int main(int argc, char** argv) {
         unique_ptr<AbstractAlgorithm> alg = algorithm.second();
         for(Travel& travel : travelsVec){
             cout << "main:  1st row of inner for(travel):   travel's num = " << travel.getIndex() << endl;
+
             simulator.errorsFileName = output + SEPERATOR + "errors" + SEPERATOR +
-                                       travel.getDir().string() + "_" + algorithm.first + ".errors.txt"; // TODO: change to simulations.errors without a folder?
+                                        algorithm.first + "_" + to_string(travel.getIndex()) + ".errors.txt";
             cout << "main:  inner for(travel):  simulator.errorsFileName = " << simulator.errorsFileName << endl;
             int travelErrors = simulator.getInput(travel.getShipPlanPath().string(), travel.getShipRoutePath().string());
             if ((CANNOTRUNTRAVEL & travelErrors) != 0) {
                 cout << "main:  inner for(travel):  if ((CANNOTRUNTRAVEL & travelErrors) != 0)" << endl;
-                fs::create_directory(output + SEPERATOR + "errors");
-                cout << "   created dir: " << output + SEPERATOR + "errors" << endl;
+                fs::create_directory("errors");
+                std::error_code ec;
+                fs::create_directory(output + SEPERATOR + "errors", ec);
+
+                cout << "   created dir: " << output + SEPERATOR + "errors" << "ec = " << ec << endl;
                 ofstream errorsFile(simulator.errorsFileName);
                 for (int i = 1; i <= (1 << 18); i *= 2)
                     if ((i & travelErrors) > 0)
@@ -199,23 +203,24 @@ int main(int argc, char** argv) {
             if (errorsOfAlgorithm != 0) {
                 clearData(simulator.shipPlan, simulator.shipRoute); // TODO: should it be here and not before continue?
                 std::error_code ec;
-                fs::create_directory(output + SEPERATOR + "output" + SEPERATOR + "errors", ec);
+                fs::create_directory(output + SEPERATOR + "errors", ec);
                 cout << "main:  inner for(travel):  if (errorsOfAlgorithm != 0)     errors directory = " <<
                 output + SEPERATOR + "output" + SEPERATOR + "errors" << endl;
                 ofstream errorsFile(simulator.errorsFileName);
-                for (int i = 1; i <= (1 << 18); i *= 2)
+                for (int i = 1; i <= (1 << 18); i *= 2) {
                     if ((i & errorsOfAlgorithm) > 0)
                         errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-                if ((errorsOfAlgorithm & (1 << 19)) > 0) {
-                    cout << "main:  inner for(travel):  if (errorsOfAlgorithm != 0)     if ((errorsOfAlgorithm & (1 << 19)) > 0)" << endl;
-                    errorsFile << algorithmErrorString;
-                    errorsFile.close();
-
-                    get<1>(algoTuple).push_back(-1);
-                    cout << "in tuple" + to_string(get<1>(algoTuple)[0]) << endl; // TODO: meant to print the last element?
-                    numErrors += 1;
-                    continue;
                 }
+                    if ((errorsOfAlgorithm & (1 << 19)) > 0) {
+                        cout << "main:  inner for(travel):  if (errorsOfAlgorithm != 0)     if ((errorsOfAlgorithm & (1 << 19)) > 0)" << endl;
+                        errorsFile << algorithmErrorString;
+                        errorsFile.close();
+
+                        get<1>(algoTuple).push_back(-1);
+                        cout << "in tuple" + to_string(get<1>(algoTuple)[0]) << endl; // TODO: meant to print the last element?
+                        numErrors += 1;
+                        continue;
+                    }
                 errorsFile.close();
             }
             cout << "4" << endl;

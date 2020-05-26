@@ -2,6 +2,8 @@
 #include <string>
 #include "../Interfaces/WeightBalanceCalculator.h"
 #include "_308394642_b.h"
+#define SEPARATOR std::filesystem::path::preferred_separator
+
 #define PORT_SYMBOL_LENGTH 6
 #define PORT_VISIT_NUM_START_IND_AFTER_SLASH 8
 using std::string;
@@ -19,21 +21,24 @@ int _308394642_b::setWeightBalanceCalculator(WeightBalanceCalculator& _calculato
     return 0; // TODO: manage errors
 }
 
+int calcVisitNum (const string& input_full_path_and_file_name){
+    string visitNumString;
+    if(input_full_path_and_file_name.substr(input_full_path_and_file_name.size() - 3) == "txt")
+        visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
+                                                              string("x.cargo_data.txt").size(), 1);
+    else // ends with .cargo_data
+        visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
+                                                              string("x.cargo_data").size(), 1);
+    cout << visitNumString << endl;
+    return stoi(visitNumString);
+}
 
 int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
-    int slashInd = input_full_path_and_file_name.find(std::filesystem::path::preferred_separator);
-    string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
-
-    int dotInd = input_full_path_and_file_name.find('.');
-    int visitNumLength = dotInd - (slashInd + 8);
-    string visitNumString = input_full_path_and_file_name.substr(slashInd + PORT_VISIT_NUM_START_IND_AFTER_SLASH, visitNumLength);
-    int visitNum = stoi(visitNumString);
-
+    string portSymbol = input_full_path_and_file_name.substr(input_full_path_and_file_name.find_last_of(SEPARATOR) + 1, PORT_SYMBOL_LENGTH);
+    int visitNum = calcVisitNum (input_full_path_and_file_name);
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
-
     vector<INSTRUCTION> instructions;
     getUnloadingInstructions(instructions, currPortIndex);
-
     bool isFinalPort = currPortIndex == shipRoute.getPortsList().size() -1;
     vector<Container*> containersAwaitingAtPort;
     errors |= readContainersAwaitingAtPort(input_full_path_and_file_name, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);
@@ -43,6 +48,7 @@ int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and
     writeInstructionsToFile(instructions, instructionsForCargoFile);
     return errors;
 }
+
 
 void _308394642_b::getUnloadingInstructions(vector<INSTRUCTION>& instructions, int currPortIndex){
     for (Container* container : shipRoute.getPortsList()[currPortIndex].getContainersToUnload()){
@@ -65,9 +71,12 @@ void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instr
             currFloor--;
             continue;
         }
-        if (isTherePlaceToMove)
-            isTherePlaceToMove = moveContainer(currContainer, instructions);
+        if (isTherePlaceToMove){
+            cout << "isTherePlaceToMove true" << endl;
+            isTherePlaceToMove = moveContainer(currContainer, instructions);}
         if (!isTherePlaceToMove) {
+            cout << "isTherePlaceToMove false" << endl;
+
             instructions.emplace_back('U', currContainer->getId(), currFloor, x, y, -1, -1, -1);
             containersToLoadBack.emplace_back('L', currContainer->getId(), currFloor - 1, x, y, -1, -1, -1);
         }
@@ -94,6 +103,7 @@ void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instr
 
 
 bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& instructions){
+    cout << "moving something" << endl;
     size_t floorOfContainer, x, y;
     std::tie(x, y, floorOfContainer) = currContainer->getLocation();
     for (int x2 = 0; x2 < this->shipPlan.getPivotXDimension(); x2++){
@@ -101,6 +111,8 @@ bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& 
             if (x2 == (int)x && y2 == (int)y) // we don't want to move to the same x,y
                 continue;
             for (int floor2 = 0; floor2 < this->shipPlan.getFloorsNum(); floor2++){
+                cout << "inside move loop" << endl;
+
                 if (this->shipPlan.getContainers()[x2][y2][floor2] != nullptr){
                     continue;
                 }
@@ -108,7 +120,9 @@ bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& 
                     if(this->calculator.tryOperation('M', currContainer->getWeight(), x2, y2) == WeightBalanceCalculator::APPROVED){ //TODO: is this the right calculator line?
                         this->shipPlan.setContainers(x2, y2, floor2, currContainer); //move to the first free spot which isn't original x,y
                         currContainer->setLocation(x2, y2, floor2);
-                        instructions.emplace_back('M', currContainer->getId(), (int)floor, (int)x, (int)y, floor2, x2, y2);
+                        cout << "moving something happening" << endl;
+
+                        instructions.emplace_back('M', currContainer->getId(), floorOfContainer, x, y, floor2, x2, y2);
                         return true;
                     }
                 }

@@ -144,7 +144,9 @@ inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v"){
 int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName,
                                              const string& currPortSymbol, string& algorithmErrorString){
     vector<INSTRUCTION> instructions;
+
     getInstructionsForPort(outputFileName, instructions);
+
     for (INSTRUCTION instruction : instructions) {
         char instructionType;
         string containerId;
@@ -227,9 +229,10 @@ void Simulator::writeNotLegalOperation(const string&){
 
 int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString) {
     cout << "startTravel: " << endl;
+    int errors = 0;
+
     Simulator::currPortIndex = 0;
     Simulator::algorithmActionsCounter = 0;
-    int errors = 0;
     for (const Port& port : this->shipRoute.getPortsList()) {
         cout << "startTravel:   ports' for loop - 1st line" << endl;
         Simulator::currPortIndex++;
@@ -245,17 +248,15 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
         cout << "startTravel:   ports' for loop:    inputFileName = " << inputFileName << endl;
 
         vector<Container *> containersAwaitingAtPort;
-        bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
-        readContainersAwaitingAtPort(inputFileName, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);
+
+        //bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
+        //readContainersAwaitingAtPort(inputFileName, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);
+
         //Errors here will be written in the same func of the next step
 
-        cout << "       before: getInstructionsForCargo" << endl;
         errors |= algorithm->getInstructionsForCargo(inputFileName, outputFileName);
-        cout << "       after: getInstructionsForCargo" << endl;
 
-        cout << "       before: checkAndCountAlgorithmActions" << endl;
         int status = checkAndCountAlgorithmActions(containersAwaitingAtPort, outputFileName, port.getPortId(), algorithmErrorString);
-        cout << "       after: checkAndCountAlgorithmActions" << endl;
 
         if (status == VALID)
             continue;
