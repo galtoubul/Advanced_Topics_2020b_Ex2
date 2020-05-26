@@ -22,7 +22,7 @@ $(COMMON)/ShipPlan.o: $(COMMON)/ShipPlan.h $(COMMON)/ShipPlan.cpp $(COMMON)/Cont
 $(COMMON)/Container.o: $(COMMON)/Container.h $(COMMON)/Container.cpp
 	$(COMP) $(CPP_COMP_FLAG) -o $@ -c $*.cpp
 $(COMMON)/ISO6346.o: $(COMMON)/ISO6346.cpp $(COMMON)/ISO6346.h
-    $(COMP) $(CPP_COMP_FLAG) -o $@ -c $*.cpp
+	$(COMP) $(CPP_COMP_FLAG) -o $@ -c $*.cpp
 $(COMMON)/ShipRoute.o: $(COMMON)/ShipRoute.h $(COMMON)/ShipRoute.cpp $(COMMON)/Port.h
 	$(COMP) $(CPP_COMP_FLAG) -o $@ -c $*.cpp
 $(COMMON)/Port.o: $(COMMON)/Port.h $(COMMON)/Port.cpp

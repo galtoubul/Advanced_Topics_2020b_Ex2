@@ -15,6 +15,7 @@ add_executable(Advanced_Topics_2020b_Ex2
         Common/Port.h                   Common/Port.cpp
         Common/ShipPlan.h               Common/ShipPlan.cpp
         Common/ShipRoute.h              Common/ShipRoute.cpp
+        Common/Travel.h                 Common/Travel.cpp
         Common/WeightBalanceCalculator.cpp
         Interfaces/AlgorithmRegistration.h
         Interfaces/AbstractAlgorithm.h

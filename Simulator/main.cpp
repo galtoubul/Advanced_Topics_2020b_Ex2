@@ -146,13 +146,13 @@ int main(int argc, char** argv) {
     }
 
     Simulator simulator;
+    simulator.initTravelsVec(travelPath);
     ErrorsInterface::populateErrorsMap();
 
     for(auto& algorithm : registrar.getAlgorithmMap()){
         cout << "registrar.getAlgorithmMap().size() = " << registrar.getAlgorithmMap().size() << endl;
 
 
-        //for(auto& algFactory : algFactoryVec) {
         tuple<string,vector<int>,int,int> algoTuple;
         get<0>(algoTuple) =  algorithm.first;
         int sum = 0;
@@ -162,19 +162,14 @@ int main(int argc, char** argv) {
         unique_ptr<AbstractAlgorithm> alg = algorithm.second();
         cout << "after" << endl;
 
-        for (int j = 1; j <= 2; ++j) {
-            cout << "travel's num = " << j << endl;
-            string travelName = "Travel" + std::to_string(j);
+        for(Travel& travel : simulator.getTravelsVec()){
+            cout << "travel's num = " << travel.getIndex() << endl;
 
-            simulator.errorsFileName = output + SEPERATOR + "output" + SEPERATOR + "errors" + SEPERATOR + travelName + "_" + algorithm.first + ".errors.txt";
+            simulator.errorsFileName = output + SEPERATOR + "output" + SEPERATOR + "errors" + SEPERATOR + travel.getDir().string() + "_" + algorithm.first + ".errors.txt";
             cout << simulator.errorsFileName << endl;
 
-            string shipPlanPath = travelName +  std::string(1, std::filesystem::path::preferred_separator) + "Ship Plan.txt";
-            string shipRoutePath = travelName + std::string(1, std::filesystem::path::preferred_separator) + "Route.txt";
-            simulator.getInput(shipPlanPath, shipRoutePath);
-
+            int travelErrors = simulator.getInput(travel.getShipPlanPath().string(), travel.getShipRoutePath().string());
             cout << "1" << endl;
-            int travelErrors = simulator.getInput(shipPlanPath, shipRoutePath);
 
             cout << "2" << endl;
             if ((CANNOTRUNTRAVEL & travelErrors) != 0) {
@@ -196,8 +191,8 @@ int main(int argc, char** argv) {
             }
             cout << "3" << endl;
             int errorsOfAlgorithm = 0;
-            errorsOfAlgorithm |= alg->readShipPlan(shipPlanPath);
-            errorsOfAlgorithm |= alg->readShipRoute(shipRoutePath);
+            errorsOfAlgorithm |= alg->readShipPlan(travel.getShipPlanPath().string());
+            errorsOfAlgorithm |= alg->readShipRoute(travel.getShipRoutePath().string());
             cout << "4" << endl;
             WeightBalanceCalculator _calculator;
             alg->setWeightBalanceCalculator(_calculator);
@@ -205,13 +200,14 @@ int main(int argc, char** argv) {
             cout << "5" << endl;
             string algorithmErrorString;
 
-            errorsOfAlgorithm |= simulator.startTravel(alg.get(), travelName, algorithmErrorString);
+            errorsOfAlgorithm |= simulator.startTravel(alg.get(), travel, algorithmErrorString);
 
             if (errorsOfAlgorithm != 0) {
                 cout << "11" << endl;
                 clearData(simulator.shipPlan, simulator.shipRoute);
 
-                fs::create_directory(output + SEPERATOR + "output" + SEPERATOR + "errors");
+		std::error_code ec;
+                fs::create_directory(output + SEPERATOR + "output" + SEPERATOR + "errors", ec);
                 cout << output + SEPERATOR + "output" + SEPERATOR + "errors" << endl;
                 ofstream errorsFile(simulator.errorsFileName);
                 for (int i = 1; i <= (1 << 18); i *= 2) {
@@ -236,7 +232,7 @@ int main(int argc, char** argv) {
 
                 errorsFile.close();
             }
-            cout << travelName << " was ended successfully for algorithm " << algorithm.first
+            cout << travel.getIndex()<< " was ended successfully for algorithm " << algorithm.first
                  << " .The number of algorithm operations: " << Simulator::algorithmActionsCounter << endl;
 
             clearData(simulator.shipPlan, simulator.shipRoute);

@@ -25,6 +25,39 @@ inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<vector<Port>&>(shipRoute.getPortsList()).clear();
 }
 
+fs::path getPath(fs::directory_entry entry, const string& lookFor, const string& lookFor2){
+    std::error_code errorCode;
+    for (const auto& file : fs::directory_iterator(entry, errorCode)) {
+        string fileName = file.path().string();
+        cout << "fileName = " << fileName << " its size = " << fileName.size() << " lookFor = " << lookFor << " its size = " << lookFor.size() << endl;
+
+        if(fileName.substr(fileName.size() - lookFor.size()) == lookFor ||
+                fileName.substr(fileName.size() - lookFor2.size()) == lookFor2)            return file;
+cout << fileName.substr(fileName.size() - lookFor.size()) << " != " << lookFor << endl;
+    }
+    return "";
+}
+
+
+void Simulator::initTravelsVec(const string& travelsPath){
+    std::error_code errorCode;
+    int index = 1;
+    cout << travelsPath << endl;
+    for (const auto& entry : fs::directory_iterator(travelsPath, errorCode)){
+        cout << "inside " << entry.path().string() << endl;
+        if(entry.is_directory()){
+            fs::path shipPlanPath = getPath(entry, ".ship_plan.txt", ".ship_plan");
+            cout << "shipPlanPath: " << shipPlanPath.string() << endl;
+            fs::path shipRoutePath = getPath(entry, ".route.txt", ".route");
+            cout << "shipRoutePath: " << shipRoutePath.string() << endl;
+            if(shipPlanPath.string().empty() || shipRoutePath.string().empty())
+                continue;
+            travelsVec.emplace_back(index, shipPlanPath, shipRoutePath, entry);
+            cout << "travelsVec.emplace_back(index, shipPlanPath, shipRoutePath, entry);" << endl;
+            index++;
+        } else cout << entry.path().string() << " isn't a DIR" << endl;
+    }
+}
 //int Simulator::initSimulation (std::pair<std::string, unique_ptr<AbstractAlgorithm>> algorithm, int travelNum){
 //    cout << "inside initSimulation" <<  endl;
 //    if(algorithm.second)   cout << "algorithm " << algorithm.first << " isn't nullptr" << endl;
@@ -353,7 +386,7 @@ void Simulator::writeNotLegalOperation(const string&){
     //TODO: write func
 }
 
-int Simulator::startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString) {
+int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString) {
     cout << "6" << endl;
 
     Simulator::currPortIndex = 0;
@@ -374,11 +407,19 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, const string& travelNa
         }
         cout << "8" << endl;
 
-        getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travelName);
+        getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travel.getDir().string());
+        cout << "inputFileName = " << inputFileName << endl;
+
+        cout << "a" << endl;
 
         vector<Container *> containersAwaitingAtPort;
+        cout << "b" << endl;
+
         readContainersAwaitingAtPort(inputFileName, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute,
                                      currPortIndex); //Errors here will be written in the same func of the next step
+
+        cout << "c" << endl;
+
         cout << "9" << endl;
 
         errors |= algorithm->getInstructionsForCargo(inputFileName, outputFileName);

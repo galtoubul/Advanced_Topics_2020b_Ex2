@@ -34,13 +34,25 @@ int findCurrPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int 
 }
 
 int _308394642_a::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
-    int slashInd = input_full_path_and_file_name.find(std::filesystem::path::preferred_separator);
-    string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
+string visitNumString;
+    if(input_full_path_and_file_name.substr(input_full_path_and_file_name.size() - 3) == "txt")
+        visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
+                                                              string("x.cargo_data.txt").size(), 1);
+    else // ends with .cargo_data
+        visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
+                                                              string("x.cargo_data").size(), 1);
+    cout << visitNumString << endl;
+    int visitNum = stoi(visitNumString);    
 
-    int dotInd = input_full_path_and_file_name.find('.');
-    int visitNumLength = dotInd - (slashInd + 8);
-    string visitNumString = input_full_path_and_file_name.substr(slashInd + PORT_VISIT_NUM_START_IND_AFTER_SLASH, visitNumLength);
-    int visitNum = stoi(visitNumString);
+int slashInd = input_full_path_and_file_name.find(std::filesystem::path::preferred_separator);
+   string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
+
+    //int dotInd = input_full_path_and_file_name.find('.');
+    //int visitNumLength = dotInd - (slashInd + 8);
+//cout << input_full_path_and_file_name << endl;
+  //  string visitNumString = input_full_path_and_file_name.substr(slashInd + PORT_VISIT_NUM_START_IND_AFTER_SLASH, visitNumLength);
+//cout << visitNumString  << endl;
+  //  int visitNum = stoi(visitNumString);
 
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
 

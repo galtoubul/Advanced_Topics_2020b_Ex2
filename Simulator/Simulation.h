@@ -6,6 +6,7 @@
 #include <memory>
 #include <functional>
 #include "../Common/Parser.h"
+#include "../Common/Travel.h"
 #include <string>
 #include "../Interfaces/WeightBalanceCalculator.h"
 #include "../Interfaces/AbstractAlgorithm.h"
@@ -21,6 +22,7 @@ public:
     ShipPlan shipPlan;
     ShipRoute shipRoute;
     WeightBalanceCalculator calculator;
+    vector<Travel> travelsVec;
 
     string errorsFileName;
 
@@ -36,7 +38,14 @@ public:
 
     int getInput(const string& shipPlanFileName, const string& shipRouteFileName);
 
-    int startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString);
+    //int startTravel (AbstractAlgorithm* algorithm, const string& travelName, string& algorithmErrorString);
+
+    int startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString);
+
+vector<Travel>& getTravelsVec(){
+        return travelsVec;
+    }
+
 
     friend std::ostream& operator<<(std::ostream& out, const Simulator& simulator);
 
@@ -57,5 +66,8 @@ public:
                                vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString);
 
     void writeNotLegalOperation(const string&);
+
+    void initTravelsVec(const string& travelsPath);
+	
 };
 
