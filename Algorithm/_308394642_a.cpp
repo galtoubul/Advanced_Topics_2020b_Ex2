@@ -33,13 +33,11 @@ int calcVisitNum (const string& input_full_path_and_file_name){
 }
 
 int _308394642_a::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
-    int slashInd = input_full_path_and_file_name.find(SEPARATOR);
-    string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
+    string portSymbol = input_full_path_and_file_name.substr(input_full_path_and_file_name.find_last_of(SEPARATOR) + 1, PORT_SYMBOL_LENGTH);
     int visitNum = calcVisitNum (input_full_path_and_file_name);
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
     vector<INSTRUCTION> instructions;
     getUnloadingInstructions(instructions, currPortIndex);
-
     bool isFinalPort = currPortIndex == shipRoute.getPortsList().size() -1;
     vector<Container*> containersAwaitingAtPort;
     errors |= readContainersAwaitingAtPort(input_full_path_and_file_name, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);
@@ -136,6 +134,7 @@ void _308394642_a::loadToShip(Container* container, vector<INSTRUCTION>& instruc
                     if(this->calculator.tryOperation('L', container->getWeight(), x, y) == WeightBalanceCalculator::APPROVED){
 //                      instructions.emplace_back('L', container->getId(), floor, x, y);
                         instructions.emplace_back('L', container->getId(), floor, x, y, -1, -1, -1);
+
                         (const_cast<Port&>(shipRoute.getPortsList()[findPortIndex(this->shipRoute, portDest, currPortIndex)])).addContainerToUnloadToPort(container);
                         return;
                     }

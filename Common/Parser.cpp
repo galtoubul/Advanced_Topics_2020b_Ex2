@@ -256,16 +256,25 @@ int validateContainersAwaitingAtPortLine (vector<string>& line) {
 
 int readContainersAwaitingAtPort (const string& inputFileName, vector<Container*>& containersAwaitingAtPort, bool isFinalPort,
                                   const ShipPlan& shipPlan, const ShipRoute& shipRoute, int currPortIndex){
+    cout << "inside readContainersAwaitingAtPort " << endl;
+
     int errors = 0;
     ifstream inputFile (inputFileName);
     string line;
     bool rejected = false;
     if (inputFile.is_open()){
+        cout << "opened  " << inputFileName << endl;
+
         if (isFinalPort) {
+            cout << "isFinalPort = true" << inputFileName << endl;
+
             errors |= (1 << 17);
             return errors;
         }
         while (getline(inputFile, line)){
+
+            cout << "the line is " << line << endl;
+
             vector<string> temp;
             split(temp, line, ',');
             if(isCommentOrWS(line))
@@ -306,8 +315,10 @@ int readContainersAwaitingAtPort (const string& inputFileName, vector<Container*
                 }
             }
 
+            cout << "put a container in awating" << endl;
             containersAwaitingAtPort.push_back(new Container(stoi(temp[1]), temp[2], temp[0], false, rejected));
         }
+        cout << "size of  containersAwaitingAtPort is " << containersAwaitingAtPort.size() << endl;
         inputFile.close();
     }
     else if (!isFinalPort){
@@ -327,7 +338,14 @@ void writeInstructionsToFile(vector<INSTRUCTION>& instructions, ofstream& instru
             continue;
         }
         instructionsForCargoFile << ", " << get<2>(instruction) <<", "
-                                 << get<3>(instruction) << ", "<< get<4>(instruction) << "\n";
+                                 << get<3>(instruction) << ", "<< get<4>(instruction) << endl;
+
+
+        cout << ", " << get<2>(instruction) <<", "
+             << get<3>(instruction) << ", "<< get<4>(instruction) << "\n";
+
+
+
     }
     instructionsForCargoFile << std::endl;
     instructionsForCargoFile.close();
@@ -356,8 +374,10 @@ vector<Container*> orderContainersByDest(vector<Container*>& containersAwaitingA
 void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& instructions) {
     ifstream outputFile(outputFileName);
     string line;
+    cout << "got here!!!!!" << endl;
     if (outputFile.is_open()) {
         while (getline(outputFile, line)) {
+            cout << line << endl;
             vector<string> temp;
             split(temp, line, ',');
             if(temp.size() < 5)
@@ -383,8 +403,12 @@ void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& i
 int findCurrPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int visitNum){
     int counter = 0;
     int currPortIndex = -1;
+
+    cout << "visit num of " << portSymbol << visitNum << endl;
+
     for (const Port& port : shipRoute.getPortsList()){
         currPortIndex++;
+        cout << "curr port id is " << port.Port::getPortId() << endl;
         if (portSymbol == port.Port::getPortId()){
             counter++;
             if (counter == visitNum)

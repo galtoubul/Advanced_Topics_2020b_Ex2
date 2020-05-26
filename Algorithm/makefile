@@ -4,7 +4,7 @@ COMMON = ../Common
 INTERFACES = ../Interfaces
 ALGORITHM = ../Algorithm
 
-SHARED_OBJS = _308394642_a.so
+SHARED_OBJS = _308394642_a.so _308394642_b.so
 CPP_COMP_FLAG = -std=c++2a -Wall -Wextra -Werror -pedantic-errors -DNDEBUG -fPIC
 CPP_LINK_FLAG = -lstdc++fs -shared
 
@@ -12,8 +12,13 @@ all: $(SHARED_OBJS)
 
 _308394642_a.so: _308394642_a.o
 	$(COMP) $(CPP_LINK_FLAG) -o $@ $^
+_308394642_b.so: _308394642_b.o
+	$(COMP) $(CPP_LINK_FLAG) -o $@ $^
+
 
 _308394642_a.o: _308394642_a.h _308394642_a.cpp $(INTERFACES)/AbstractAlgorithm.h $(INTERFACES)/AlgorithmRegistration.h $(COMMON)/Parser.h $(COMMON)/ShipPlan.h $(COMMON)/Container.h $(COMMON)/ShipRoute.h $(COMMON)/Port.h $(INTERFACES)/WeightBalanceCalculator.h
+	$(COMP) $(CPP_COMP_FLAG) -c $*.cpp
+_308394642_b.o: _308394642_a.h _308394642_a.cpp $(INTERFACES)/AbstractAlgorithm.h $(INTERFACES)/AlgorithmRegistration.h $(COMMON)/Parser.h $(COMMON)/ShipPlan.h $(COMMON)/Container.h $(COMMON)/ShipRoute.h $(COMMON)/Port.h $(INTERFACES)/WeightBalanceCalculator.h
 	$(COMP) $(CPP_COMP_FLAG) -c $*.cpp
 $(COMMON)/Parser.o: $(COMMON)/Parser.h $(COMMON)/Parser.cpp $(COMMON)/ShipPlan.h $(COMMON)/ShipRoute.h $(INTERFACES)/ErrorsInterface.h
 	$(COMP) $(CPP_COMP_FLAG) -o $@ -c $*.cpp
