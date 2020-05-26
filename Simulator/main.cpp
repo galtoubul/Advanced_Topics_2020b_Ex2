@@ -38,6 +38,19 @@ string getCurrentDir() {
     return currentWorkingDir;
 }
 
+vector<fs::path> getAlgorithmsPaths(const string& algorithmPath){
+    vector<fs::path> algorithmsPaths;
+    std::error_code ec;
+    for (const auto & entry : fs::directory_iterator(algorithmPath, ec)){
+        string fileName = entry.path().string();
+        if(string(".so") == (fileName.string::substr(fileName.size() - 3))){
+            algorithmsPaths.emplace_back(fileName);
+        } // TODO: handle an error of not getting so files
+    }
+
+    return algorithmsPaths;
+}
+
 vector<fs::path> getPaths (int argc, char** argv, string& travelPath, string& algorithmPath, string& output){
     vector<string> args(argv, argv + argc);
     for (size_t i = 1; i < args.size(); ++i) {
@@ -52,35 +65,11 @@ vector<fs::path> getPaths (int argc, char** argv, string& travelPath, string& al
     if (output.empty())
         output = getCurrentDir();
 
-    vector<fs::path> algorithmsPaths;
-    if (algorithmPath.empty()){
-        std::error_code errorCode;
-        for (const auto & entry : fs::directory_iterator(getCurrentDir(), errorCode)){
-            string fileName = entry.path().string();
-            if(string(".so") == (fileName.string::substr(fileName.size() - 3))){
-                algorithmsPaths.push_back(fileName);
-            } // TODO: handle an error of not getting so files
-        }
-    }
+    if (algorithmPath.empty())
+        algorithmPath = getCurrentDir();
 
-//    if (algorithmPath.empty()){
-//        fs::create_directory(output + SEPERATOR + "Algorithms");
-//        algorithmPath = getCurrentDir() + SEPERATOR + "Algorithms";
-//        std::error_code errorCode;
-//        for (const auto & entry : fs::directory_iterator(getCurrentDir(), errorCode)){
-//            string fileName = entry.path().string();
-//            if(string(".so") == (fileName.string::substr(fileName.size() - 3))){
-//                string algorithmName = fileName.string::substr(fileName.find_last_of(SEPERATOR) + 1);
-//                fs::copy(fileName, algorithmPath + SEPERATOR + algorithmName);
-//            } // TODO: handle an error of not getting so files
-//        }
-//    }
-    return algorithmsPaths;
+    return getAlgorithmsPaths(algorithmPath);
 }
-
-int Simulator::algorithmActionsCounter;
-size_t Simulator::currPortIndex;
-std::map<int, std::string> ErrorsInterface::errorsMap;
 
 inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<VVVC&>(shipPlan.getContainers()).clear();
@@ -96,6 +85,21 @@ bool compareAlgoTuples(tuple<string,vector<int>,int,int> x, tuple<string,vector<
     }
 }
 
+ofstream initSimulationResults(const string& output, int travelNum){
+    cout << "main:  output dir = " << output << endl;
+    ofstream simulationResults(output + SEPERATOR + "simulation.results.csv");
+    simulationResults << "RESULTS,";
+    for (int j = 1; j <= travelNum; ++j)
+        simulationResults << "travel "+ to_string(j) +",";
+    simulationResults << "SUM,";
+    simulationResults << "NumErrors\n";
+    return simulationResults;
+}
+
+int Simulator::algorithmActionsCounter;
+size_t Simulator::currPortIndex;
+std::map<int, std::string> ErrorsInterface::errorsMap;
+
 int main(int argc, char** argv) {
     string travelPath, algorithmPath, output;
     vector<fs::path> algorithmPaths = getPaths(argc, argv, travelPath, algorithmPath, output);
@@ -104,84 +108,76 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    // Dynamically load algorithms
     auto& registrar = Registrar::getRegistrar();
-
-    cout << output << endl;
-    ofstream simulationResults(output + SEPERATOR + "output" + SEPERATOR + "simulation.results.csv"); //TODO: make sure the path is right
-    simulationResults << "RESULTS,";
-    for (int j =1; j<=2; ++j ){
-        simulationResults << "travel "+ to_string(j) +",";
-    }
-    simulationResults << "SUM,";
-    simulationResults << "NumErrors\n";
-
-    vector<tuple<string,vector<int>,int,int>> outputVector;
-
-    std::error_code errorCode;
-    if(algorithmPaths.empty()){
-        cout << "algorithmPaths.empty()" << endl;
-        for (const auto& entry : fs::directory_iterator(algorithmPath, errorCode)){
-            string fileName = entry.path().string();
-            if(string(".so") == (fileName.string::substr(fileName.size() - 3))){
-                string algorithmName = fileName.string::substr(fileName.find_last_of(SEPERATOR) + 1, fileName.size() - fileName.find_last_of(SEPERATOR) - 4);
-                string path = algorithmPath + SEPERATOR + algorithmName + ".so";
-                std::string error;
-                if (!registrar.loadAlgorithmFromFile(path.c_str(), error, algorithmName)) {
-                    std::cerr << error << '\n';
-                    return EXIT_FAILURE;
-                }
-            }
-        }
-    } else{
-        cout << "!algorithmPaths.empty()" << endl;
-        for (auto& entry : algorithmPaths){
-            string path = entry.string();
-            string algorithmName = path.substr(path.find_last_of(SEPERATOR) + 1, path.size() - path.find_last_of(SEPERATOR) - 4);
-            std::string error;
-            if (!registrar.loadAlgorithmFromFile(path.c_str(), error, algorithmName)) {
-                std::cerr << error << '\n';
-                return EXIT_FAILURE;
-            }
+    for (auto& algoPath : algorithmPaths){
+        string path = algoPath.string();
+        string algorithmName = path.substr(path.find_last_of(SEPERATOR) + 1, path.size() - path.find_last_of(SEPERATOR) - 4);
+        string error;
+        if (!registrar.loadAlgorithmFromFile(path.c_str(), error, algorithmName)) {
+            std::cerr << error << '\n';
+            return EXIT_FAILURE;
         }
     }
+
+//    std::error_code errorCode;
+//    if(algorithmPaths.empty()){
+//        cout << "algorithmPaths.empty()" << endl;
+//        for (const auto& entry : fs::directory_iterator(algorithmPath, errorCode)){
+//            string fileName = entry.path().string();
+//            if(string(".so") == (fileName.string::substr(fileName.size() - 3))){
+//                string algorithmName = fileName.string::substr(fileName.find_last_of(SEPERATOR) + 1, fileName.size() - fileName.find_last_of(SEPERATOR) - 4);
+//                string path = algorithmPath + SEPERATOR + algorithmName + ".so";
+//                std::string error;
+//                if (!registrar.loadAlgorithmFromFile(path.c_str(), error, algorithmName)) {
+//                    std::cerr << error << '\n';
+//                    return EXIT_FAILURE;
+//                }
+//            }
+//        }
+//    } else{
+//        cout << "!algorithmPaths.empty()" << endl;
+//        for (auto& entry : algorithmPaths){
+//            string path = entry.string();
+//            string algorithmName = path.substr(path.find_last_of(SEPERATOR) + 1, path.size() - path.find_last_of(SEPERATOR) - 4);
+//            std::string error;
+//            if (!registrar.loadAlgorithmFromFile(path.c_str(), error, algorithmName)) {
+//                std::cerr << error << '\n';
+//                return EXIT_FAILURE;
+//            }
+//        }
+//    }
 
     Simulator simulator;
     simulator.initTravelsVec(travelPath);
+    auto travelsVec = simulator.getTravelsVec();
     ErrorsInterface::populateErrorsMap();
+    ofstream simulationResults = initSimulationResults(output, travelsVec.size());
+
+    vector<tuple<string,vector<int>,int,int>> outputVector;
 
     for(auto& algorithm : registrar.getAlgorithmMap()){
-        cout << "registrar.getAlgorithmMap().size() = " << registrar.getAlgorithmMap().size() << endl;
-
-
+        cout << "main:  1st row of outer for(algorithm):   registrar.getAlgorithmMap().size() = " << registrar.getAlgorithmMap().size() << endl;
         tuple<string,vector<int>,int,int> algoTuple;
-        get<0>(algoTuple) =  algorithm.first;
+        get<0>(algoTuple) = algorithm.first;
         int sum = 0;
         int numErrors = 0;
 
-        cout << "before" << endl;
         unique_ptr<AbstractAlgorithm> alg = algorithm.second();
-        cout << "after" << endl;
-
-        for(Travel& travel : simulator.getTravelsVec()){
-            cout << "travel's num = " << travel.getIndex() << endl;
-
-            simulator.errorsFileName = output + SEPERATOR + "output" + SEPERATOR + "errors" + SEPERATOR + travel.getDir().string() + "_" + algorithm.first + ".errors.txt";
-            cout << simulator.errorsFileName << endl;
-
+        for(Travel& travel : travelsVec){
+            cout << "main:  1st row of inner for(travel):   travel's num = " << travel.getIndex() << endl;
+            simulator.errorsFileName = output + SEPERATOR + "errors" + SEPERATOR +
+                                       travel.getDir().string() + "_" + algorithm.first + ".errors.txt"; // TODO: change to simulations.errors without a folder?
+            cout << "main:  inner for(travel):  simulator.errorsFileName = " << simulator.errorsFileName << endl;
             int travelErrors = simulator.getInput(travel.getShipPlanPath().string(), travel.getShipRoutePath().string());
-            cout << "1" << endl;
-
-            cout << "2" << endl;
             if ((CANNOTRUNTRAVEL & travelErrors) != 0) {
-                cout << "if ((CANNOTRUNTRAVEL & travelErrors) != 0) {" << endl;
-                fs::create_directory(output + SEPERATOR + "output" + SEPERATOR + "errors");
-                cout << output + SEPERATOR + "output" + SEPERATOR + "errors" << endl;
+                cout << "main:  inner for(travel):  if ((CANNOTRUNTRAVEL & travelErrors) != 0)" << endl;
+                fs::create_directory(output + SEPERATOR + "errors");
+                cout << "   created dir: " << output + SEPERATOR + "errors" << endl;
                 ofstream errorsFile(simulator.errorsFileName);
-                for (int i = 1; i <= (1 << 18); i *= 2) {
-                    if ((i & travelErrors) > 0) {
+                for (int i = 1; i <= (1 << 18); i *= 2)
+                    if ((i & travelErrors) > 0)
                         errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-                    }
-                }
                 errorsFile << "Travel errors occurred. Skipping travel.";
                 errorsFile.close();
                 clearData(simulator.shipPlan, simulator.shipRoute);
@@ -189,56 +185,45 @@ int main(int argc, char** argv) {
                 numErrors += 1;
                 continue;
             }
-            cout << "3" << endl;
+            cout << "1" << endl;
             int errorsOfAlgorithm = 0;
             errorsOfAlgorithm |= alg->readShipPlan(travel.getShipPlanPath().string());
             errorsOfAlgorithm |= alg->readShipRoute(travel.getShipRoutePath().string());
-            cout << "4" << endl;
+            cout << "2" << endl;
             WeightBalanceCalculator _calculator;
             alg->setWeightBalanceCalculator(_calculator);
             simulator.setWeightBalanceCalculator(_calculator);
-            cout << "5" << endl;
+            cout << "3" << endl;
             string algorithmErrorString;
-
             errorsOfAlgorithm |= simulator.startTravel(alg.get(), travel, algorithmErrorString);
-
             if (errorsOfAlgorithm != 0) {
-                cout << "11" << endl;
-                clearData(simulator.shipPlan, simulator.shipRoute);
-
-		std::error_code ec;
+                clearData(simulator.shipPlan, simulator.shipRoute); // TODO: should it be here and not before continue?
+                std::error_code ec;
                 fs::create_directory(output + SEPERATOR + "output" + SEPERATOR + "errors", ec);
-                cout << output + SEPERATOR + "output" + SEPERATOR + "errors" << endl;
+                cout << "main:  inner for(travel):  if (errorsOfAlgorithm != 0)     errors directory = " <<
+                output + SEPERATOR + "output" + SEPERATOR + "errors" << endl;
                 ofstream errorsFile(simulator.errorsFileName);
-                for (int i = 1; i <= (1 << 18); i *= 2) {
-                    if ((i & errorsOfAlgorithm) > 0) {
+                for (int i = 1; i <= (1 << 18); i *= 2)
+                    if ((i & errorsOfAlgorithm) > 0)
                         errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-                    }
-                }
-                cout << "12" << endl;
-
                 if ((errorsOfAlgorithm & (1 << 19)) > 0) {
-                    cout << "13" << endl;
-
+                    cout << "main:  inner for(travel):  if (errorsOfAlgorithm != 0)     if ((errorsOfAlgorithm & (1 << 19)) > 0)" << endl;
                     errorsFile << algorithmErrorString;
                     errorsFile.close();
-                    //return -1;
 
                     get<1>(algoTuple).push_back(-1);
-                    cout << "in tuple" + to_string(get<1>(algoTuple)[0]) << endl;
+                    cout << "in tuple" + to_string(get<1>(algoTuple)[0]) << endl; // TODO: meant to print the last element?
                     numErrors += 1;
                     continue;
                 }
-
                 errorsFile.close();
             }
+            cout << "4" << endl;
             cout << travel.getIndex()<< " was ended successfully for algorithm " << algorithm.first
-                 << " .The number of algorithm operations: " << Simulator::algorithmActionsCounter << endl;
-
+                 << " .The number of algorithm operations: " << Simulator::algorithmActionsCounter << endl; //TODO: delete before submitting
             clearData(simulator.shipPlan, simulator.shipRoute);
             sum += simulator.algorithmActionsCounter;
             get<1>(algoTuple).push_back(simulator.algorithmActionsCounter);
-
         }
         get<2>(algoTuple) = sum;
         get<3>(algoTuple) = numErrors;
@@ -263,37 +248,6 @@ int main(int argc, char** argv) {
         }
     }
     simulationResults.close();
-
-//    if (algorithmPath == getCurrentDir() + SEPERATOR + "Algorithms"){
-//        cout << algorithmPath << endl;
-//        for (const auto & entry : fs::directory_iterator(algorithmPath, errorCode)){
-//            string fileName = entry.path().string();
-//            cout << fileName << endl;
-//            fs::remove(fileName);
-//        }
-//        fs::is_empty(algorithmPath) ? cout << algorithmPath << " is empty" << endl : cout << algorithmPath << " isn't empty" << endl;
-//        rmdir(algorithmPath.c_str());
-//    }
-
-//    if (algorithmPath == getCurrentDir() + SEPERATOR + "Algorithms"){
-//        cout << algorithmPath << endl;
-////        std::uintmax_t n = fs::remove_all(algorithmPath + SEPERATOR);
-////        std::cout << "Deleted " << n << " files or directories\n";
-//        for (const auto & entry : fs::directory_iterator(algorithmPath, errorCode)){
-//            string fileName = entry.path().string();
-//            cout << fileName << endl;
-//            fs::remove(fileName);
-//        }
-//        fs::is_empty(algorithmPath) ? cout << algorithmPath << " is empty" << endl : cout << algorithmPath << " isn't empty" << endl;
-
-//        if(!fs::is_empty(algorithmPath)){
-//            std::uintmax_t n = fs::remove_all(algorithmPath);
-//            std::cout << "Deleted " << n << " files or directories\n";
-//        }
-//        fs::remove(algorithmPath + SEPERATOR);
-    //rmdir(algorithmPath.c_str());
-//        system("rmdir  --ignore-fail-on-non-empty /specific/a/home/cc/students/cs/galtoubul/Ex2/Simulator/Algorithms");
-//    }
 
     return EXIT_SUCCESS;
 }

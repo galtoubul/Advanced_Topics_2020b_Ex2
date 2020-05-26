@@ -24,7 +24,6 @@ void split(vector<string>& elems, const string &s, char delim) {
     }
 }
 
-
 bool isShipPlanLineValid (const string& line){ //TODO: check limits
     const std::regex regex("\\s*[0-9]\\s*[,]\\s*[0-9]\\s*[,]\\s*[0-9]\\s*");
     if (!(std::regex_match(line, regex))){
@@ -166,7 +165,7 @@ int Parser::readShipRoute(ShipRoute& shipRoute, const string& shipPlanFileName){
                 continue;
 
             line = trim(line);
-            if (checkIfValidPortId(line) != 0){ //have to be in model of: XX XXX - size 6
+            if (checkIfValidPortId(line) != 0){ //has to be in model of: XX XXX - size 6
                 errors |= (1 << 6);
                 continue;
             }
@@ -175,9 +174,9 @@ int Parser::readShipRoute(ShipRoute& shipRoute, const string& shipPlanFileName){
 
             //the same port can't appear in two consecutive lines
             if(!shipRoute.getPortsList().empty() && line == shipRoute.getPortsList()[currPortInd - 1].getPortId()){
-                //           SAME_PORT_AS_PREV
+                // SAME_PORT_AS_PREV
                 errors |= (1 << 5);
-                //exit(EXIT_FAILURE);
+                // exit(EXIT_FAILURE);
                 continue;
             }
 
@@ -364,11 +363,11 @@ void getInstructionsForPort(const string& outputFileName, vector<INSTRUCTION>& i
             if(temp.size() < 5)
                 continue;
             if(temp.size() == 5)
-//                instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]));
+//          instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]));
             instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]), -1, -1, -1);
 
             if(temp.size() == 8)
-//                instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]));
+//          instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]), stoi(temp[4]));
             instructions.emplace_back(temp[0]. at(0), temp[1], stoi(temp[2]), stoi(temp[3]),
                                       stoi(temp[4]), stoi(temp[5]), stoi(temp[6]), stoi(temp[7]));
 

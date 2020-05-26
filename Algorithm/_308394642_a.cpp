@@ -4,6 +4,7 @@
 #include "_308394642_a.h"
 #define PORT_SYMBOL_LENGTH 6
 #define PORT_VISIT_NUM_START_IND_AFTER_SLASH 8
+#define SEPARATOR std::filesystem::path::preferred_separator
 using std::string;
 using std::cout;
 using std::vector;
@@ -19,9 +20,8 @@ int _308394642_a::setWeightBalanceCalculator(WeightBalanceCalculator& _calculato
     return 0; // TODO: manage errors
 }
 
-
-int _308394642_a::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
-string visitNumString;
+int calcVisitNum (const string& input_full_path_and_file_name){
+    string visitNumString;
     if(input_full_path_and_file_name.substr(input_full_path_and_file_name.size() - 3) == "txt")
         visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
                                                               string("x.cargo_data.txt").size(), 1);
@@ -29,20 +29,14 @@ string visitNumString;
         visitNumString = input_full_path_and_file_name.substr(input_full_path_and_file_name.size() -
                                                               string("x.cargo_data").size(), 1);
     cout << visitNumString << endl;
-    int visitNum = stoi(visitNumString);    
+    return stoi(visitNumString);
+}
 
-int slashInd = input_full_path_and_file_name.find(std::filesystem::path::preferred_separator);
-   string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
-
-    //int dotInd = input_full_path_and_file_name.find('.');
-    //int visitNumLength = dotInd - (slashInd + 8);
-//cout << input_full_path_and_file_name << endl;
-  //  string visitNumString = input_full_path_and_file_name.substr(slashInd + PORT_VISIT_NUM_START_IND_AFTER_SLASH, visitNumLength);
-//cout << visitNumString  << endl;
-  //  int visitNum = stoi(visitNumString);
-
+int _308394642_a::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
+    int slashInd = input_full_path_and_file_name.find(SEPARATOR);
+    string portSymbol = input_full_path_and_file_name.substr(slashInd + 1, PORT_SYMBOL_LENGTH);
+    int visitNum = calcVisitNum (input_full_path_and_file_name);
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
-
     vector<INSTRUCTION> instructions;
     getUnloadingInstructions(instructions, currPortIndex);
 
@@ -57,9 +51,8 @@ int slashInd = input_full_path_and_file_name.find(std::filesystem::path::preferr
 }
 
 void _308394642_a::getUnloadingInstructions(vector<INSTRUCTION>& instructions, int currPortIndex){
-    for (Container* container : shipRoute.getPortsList()[currPortIndex].getContainersToUnload()){
+    for (Container* container : shipRoute.getPortsList()[currPortIndex].getContainersToUnload())
         unloadToPort(container, instructions);
-    }
 }
 
 void _308394642_a::unloadToPort(Container* container, vector<INSTRUCTION>& instructions){
@@ -78,9 +71,8 @@ void _308394642_a::unloadToPort(Container* container, vector<INSTRUCTION>& instr
             continue;
         }
         if(this->calculator.tryOperation('U', currContainer->getWeight(), x, y) == WeightBalanceCalculator::APPROVED){
-//            instructions.emplace_back('U',currContainer->getId(), currFloor, x, y);
-//            containersToLoadBack.emplace_back('L', currContainer->getId(), currFloor - 1, x, y);
-
+//          instructions.emplace_back('U',currContainer->getId(), currFloor, x, y);
+//          containersToLoadBack.emplace_back('L', currContainer->getId(), currFloor - 1, x, y);
             instructions.emplace_back('U',currContainer->getId(), currFloor, x, y, -1, -1, -1);
             containersToLoadBack.emplace_back('L', currContainer->getId(), currFloor - 1, x, y, -1, -1, -1);
             currFloor--;
@@ -88,8 +80,7 @@ void _308394642_a::unloadToPort(Container* container, vector<INSTRUCTION>& instr
     }
 
     currContainer = this->shipPlan.getContainers()[x][y][currFloor];
-//    instructions.emplace_back('U', currContainer->getId(), currFloor, x, y);
-
+//  instructions.emplace_back('U', currContainer->getId(), currFloor, x, y);
     instructions.emplace_back('U', currContainer->getId(), currFloor, x, y, -1, -1, -1);
     this->shipPlan.removeContainer(x, y, currFloor);
 
@@ -111,16 +102,14 @@ void _308394642_a::getLoadingInstructions(vector<INSTRUCTION>& instructions, vec
     for (Container* container : containersAwaitingAtPort){
         string portDest = container->getDestination();
         if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) {
-//            instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
-
+//          instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
             instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
         }
     }
     vector<Container*> sortedContainersAwaitingAtPort = orderContainersByDest(containersAwaitingAtPort, shipRoute, currPortIndex);
     for (Container* container : sortedContainersAwaitingAtPort){
         if (container->isRejected()){
-//            instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
-
+//          instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
             instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
             continue;
         }
@@ -132,8 +121,7 @@ void _308394642_a::loadToShip(Container* container, vector<INSTRUCTION>& instruc
     string portDest = container->getDestination();
     if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) {
         instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
-
-//        instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
+//      instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
         return;
     }
     for (int x = 0; x < this->shipPlan.getPivotXDimension(); x++){
@@ -146,8 +134,7 @@ void _308394642_a::loadToShip(Container* container, vector<INSTRUCTION>& instruc
                     this->shipPlan.setContainers(x, y, floor, container); //for now put in the first free spot
                     container->setLocation(x, y, floor);
                     if(this->calculator.tryOperation('L', container->getWeight(), x, y) == WeightBalanceCalculator::APPROVED){
-//                        instructions.emplace_back('L', container->getId(), floor, x, y);
-
+//                      instructions.emplace_back('L', container->getId(), floor, x, y);
                         instructions.emplace_back('L', container->getId(), floor, x, y, -1, -1, -1);
                         (const_cast<Port&>(shipRoute.getPortsList()[findPortIndex(this->shipRoute, portDest, currPortIndex)])).addContainerToUnloadToPort(container);
                         return;
