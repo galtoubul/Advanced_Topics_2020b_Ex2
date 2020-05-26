@@ -185,9 +185,7 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
                 return ERROR;
         }
         else if(instructionType == 'M'){
-
             algorithmActionsCounter++;
-
             container = shipPlan.getContainers()[x1][y1][floor1];
             if (container == nullptr) {
                 algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1,"this container isn't exist at Ship");

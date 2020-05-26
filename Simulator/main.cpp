@@ -222,8 +222,8 @@ int main(int argc, char** argv) {
             cout << travel.getIndex()<< " was ended successfully for algorithm " << algorithm.first
                  << " .The number of algorithm operations: " << Simulator::algorithmActionsCounter << endl; //TODO: delete before submitting
             clearData(simulator.shipPlan, simulator.shipRoute);
-            sum += simulator.algorithmActionsCounter;
-            get<1>(algoTuple).push_back(simulator.algorithmActionsCounter);
+            sum += Simulator::algorithmActionsCounter;
+            get<1>(algoTuple).push_back(Simulator::algorithmActionsCounter);
         }
         get<2>(algoTuple) = sum;
         get<3>(algoTuple) = numErrors;
