@@ -5,7 +5,7 @@ INTERFACES = ../Interfaces
 ALGORITHM = ../Algorithm
 
 SHARED_OBJS = _308394642_a.so _308394642_b.so
-CPP_COMP_FLAG = -std=c++2a -Wall -Wextra -Werror -pedantic-errors -DNDEBUG -fPIC
+CPP_COMP_FLAG = -std=c++2a -Wall -Wextra -Werror -pedantic-errors -DNDEBUG -fPIC -fvisibility=hidden
 CPP_LINK_FLAG = -lstdc++fs -shared
 
 all: $(SHARED_OBJS)
