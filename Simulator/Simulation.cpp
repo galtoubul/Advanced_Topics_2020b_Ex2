@@ -224,9 +224,8 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
 }
 
 int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString) {
-    cout << "startTravel: " << endl;
+    cout << "startTravel:   travel's num = " << travel.getIndex() << endl;
     int errors = 0;
-
     Simulator::currPortIndex = 0;
     Simulator::algorithmActionsCounter = 0;
     for (const Port& port : this->shipRoute.getPortsList()) {
@@ -241,7 +240,7 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
         string inputFileName, outputFileName;
         getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travel.getDir().string());
 
-        vector<Container *> containersAwaitingAtPort;
+        vector<Container*> containersAwaitingAtPort;
 
         //bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
         //readContainersAwaitingAtPort(inputFileName, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);

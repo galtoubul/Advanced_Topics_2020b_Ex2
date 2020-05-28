@@ -38,7 +38,7 @@ int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and
     int visitNum = calcVisitNum (input_full_path_and_file_name);
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
     vector<INSTRUCTION> instructions;
-    cout << "currPortIndex= " << currPortIndex << "portSymbol= " << portSymbol << endl;
+    cout << "getInstructionsForCargo:   currPortIndex = " << currPortIndex << " portSymbol = " << portSymbol << " visit num = " << visitNum << endl;
     getUnloadingInstructions(instructions, currPortIndex);
     bool isFinalPort = currPortIndex == shipRoute.getPortsList().size() -1;
     vector<Container*> containersAwaitingAtPort;
@@ -50,12 +50,10 @@ int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and
     return errors;
 }
 
-
 void _308394642_b::getUnloadingInstructions(vector<INSTRUCTION>& instructions, int currPortIndex){
-    cout << "inside getUnloadingInstructions" << endl;
-    cout << "shipRoute.getPortsList()[currPortIndex].getContainersToUnload() = " << shipRoute.getPortsList()[currPortIndex].getContainersToUnload().size() << endl;
+    cout << "getUnloadingInstructions:  shipRoute.getPortsList()[currPortIndex].getContainersToUnload() = " << shipRoute.getPortsList()[currPortIndex].getContainersToUnload().size() << endl;
     for (Container* container : shipRoute.getPortsList()[currPortIndex].getContainersToUnload()){
-        cout << "trying to unload " << container->getId() << endl;
+        cout << "       trying to unload " << container->getId() << endl;
         unloadToPort(container, instructions);
     }
 }
@@ -63,7 +61,7 @@ void _308394642_b::getUnloadingInstructions(vector<INSTRUCTION>& instructions, i
 void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instructions){
     size_t floorOfContainer, x, y;
     std::tie(x, y, floorOfContainer) = container->getLocation();
-    cout << "inside unloadtoport" << endl;
+    cout << "unloadToPort: " << endl;
     size_t currFloor = this->shipPlan.getContainers()[x][y].size() - 1; //start from highest floor of x,y
     vector<INSTRUCTION> containersToLoadBack;
     Container* currContainer;
@@ -76,19 +74,17 @@ void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instr
             continue;
         }
         if (isTherePlaceToMove){
-            cout << "isTherePlaceToMove true" << endl;
-            isTherePlaceToMove = moveContainer(currContainer, instructions);}
+            cout << "       isTherePlaceToMove true" << endl;
+            isTherePlaceToMove = moveContainer(currContainer, instructions);
+        }
         if (!isTherePlaceToMove) {
-            cout << "isTherePlaceToMove false" << endl;
-
+            cout << "       isTherePlaceToMove false" << endl;
             instructions.emplace_back('U', currContainer->getId(), currFloor, x, y, -1, -1, -1);
             containersToLoadBack.emplace_back('L', currContainer->getId(), currFloor - 1, x, y, -1, -1, -1);
         }
         currFloor--;
     }
-
     currContainer = this->shipPlan.getContainers()[x][y][currFloor];
-
     instructions.emplace_back('U', currContainer->getId(), currFloor, x, y, -1, -1, -1);
     this->shipPlan.removeContainer(x, y, currFloor);
 
@@ -96,8 +92,8 @@ void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instr
     currFloor++;
     while (currFloor != this->shipPlan.getContainers()[x][y].size() && i >= 0) {
         currContainer = this->shipPlan.getContainers()[x][y][currFloor];
-        currContainer->setLocation(x,y,currFloor - 1);
-        this->shipPlan.setContainers(x,y,currFloor - 1, currContainer);
+        currContainer->setLocation(x, y, currFloor - 1);
+        this->shipPlan.setContainers(x, y, currFloor - 1, currContainer);
         instructions.push_back(containersToLoadBack[i]);
         i--;
         currFloor++;
@@ -105,9 +101,8 @@ void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instr
     this->shipPlan.setContainers(x,y,currFloor - 1, nullptr);
 }
 
-
 bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& instructions){
-    cout << "moving something" << endl;
+    cout << "moveContainer:" << endl;
     size_t floorOfContainer, x, y;
     std::tie(x, y, floorOfContainer) = currContainer->getLocation();
     for (int x2 = 0; x2 < this->shipPlan.getPivotXDimension(); x2++){
@@ -115,17 +110,14 @@ bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& 
             if (x2 == (int)x && y2 == (int)y) // we don't want to move to the same x,y
                 continue;
             for (int floor2 = 0; floor2 < this->shipPlan.getFloorsNum(); floor2++){
-                cout << "inside move loop" << endl;
-
-                if (this->shipPlan.getContainers()[x2][y2][floor2] != nullptr){
+                cout << "   inside move loop" << endl;
+                if (this->shipPlan.getContainers()[x2][y2][floor2] != nullptr)
                     continue;
-                }
                 else{
                     if(this->calculator.tryOperation('M', currContainer->getWeight(), x2, y2) == WeightBalanceCalculator::APPROVED){ //TODO: is this the right calculator line?
                         this->shipPlan.setContainers(x2, y2, floor2, currContainer); //move to the first free spot which isn't original x,y
                         currContainer->setLocation(x2, y2, floor2);
-                        cout << "moving something happening" << endl;
-
+                        cout << "   moving something happening" << endl;
                         instructions.emplace_back('M', currContainer->getId(), floorOfContainer, x, y, floor2, x2, y2);
                         return true;
                     }
@@ -138,19 +130,20 @@ bool _308394642_b::moveContainer(Container* currContainer, vector<INSTRUCTION>& 
 
 void _308394642_b::getLoadingInstructions(vector<INSTRUCTION>& instructions, vector<Container*> containersAwaitingAtPort
         , int currPortIndex){
+    cout << "getLoadingInstructions: " << endl;
     for (Container* container : containersAwaitingAtPort){
         string portDest = container->getDestination();
         if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) {
-//            instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
-
+            cout << "getLoadingInstructions:    container " << container->getId() << " isn't in route." << " going to reject it" << endl;
+//          instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
             instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
         }
     }
     vector<Container*> sortedContainersAwaitingAtPort = orderContainersByDest(containersAwaitingAtPort, shipRoute, currPortIndex);
     for (Container* container : sortedContainersAwaitingAtPort){
         if (container->isRejected()){
-//            instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
-
+            cout << "getLoadingInstructions:    container " << container->getId() << " isn't in route." << " going to reject it" << endl;
+//          instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
             instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
             continue;
         }
@@ -159,19 +152,19 @@ void _308394642_b::getLoadingInstructions(vector<INSTRUCTION>& instructions, vec
 }
 
 void _308394642_b::loadToShip(Container* container, vector<INSTRUCTION>& instructions, int currPortIndex){
+    cout << "loadToShip: " << endl;
     string portDest = container->getDestination();
     if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) {
+        cout << "loadToShip:    port " << portDest << " isn't in route." << " going to reject it" << endl;
         instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
-
-//        instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
+//      instructions.emplace_back('R', container->getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE);
         return;
     }
     for (int x = 0; x < this->shipPlan.getPivotXDimension(); x++){
         for (int y = 0; y < this->shipPlan.getPivotYDimension(); y++){
             for (int floor = 0; floor < this->shipPlan.getFloorsNum(); floor++){
-                if (this->shipPlan.getContainers()[x][y][floor] != nullptr){
+                if (this->shipPlan.getContainers()[x][y][floor] != nullptr)
                     continue;
-                }
                 else{
                     this->shipPlan.setContainers(x, y, floor, container); //for now put in the first free spot
                     container->setLocation(x, y, floor);

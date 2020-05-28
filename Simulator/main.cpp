@@ -86,7 +86,7 @@ bool compareAlgoTuples(tuple<string,vector<int>,int,int> x, tuple<string,vector<
 }
 
 ofstream initSimulationResults(const string& output, int travelNum){
-    cout << "main:  output dir = " << output << endl;
+    cout << "initSimulationResults:  output dir = " << output << endl;
     ofstream simulationResults(output + SEPERATOR + "simulation.results.csv");
     simulationResults << "RESULTS,";
     for (int j = 1; j <= travelNum; ++j)
@@ -157,7 +157,8 @@ int main(int argc, char** argv) {
     vector<tuple<string,vector<int>,int,int>> outputVector;
 
     for(auto& algorithm : registrar.getAlgorithmMap()){
-        cout << "main:  1st row of outer for(algorithm):   registrar.getAlgorithmMap().size() = " << registrar.getAlgorithmMap().size() << endl;
+        cout << "main:  1st row of outer for(algorithm):   registrar.getAlgorithmMap().size() = " << registrar.getAlgorithmMap().size() <<
+        "current algorithm = " << algorithm.first << endl;
         tuple<string,vector<int>,int,int> algoTuple;
         get<0>(algoTuple) = algorithm.first;
         int sum = 0;
@@ -166,7 +167,6 @@ int main(int argc, char** argv) {
         unique_ptr<AbstractAlgorithm> alg = algorithm.second();
         for(Travel& travel : travelsVec){
             cout << "main:  1st row of inner for(travel):   travel's num = " << travel.getIndex() << endl;
-
             simulator.errorsFileName = output + SEPERATOR + "errors" + SEPERATOR +
                                         algorithm.first + "_" + to_string(travel.getIndex()) + ".errors.txt";
             cout << "main:  inner for(travel):  simulator.errorsFileName = " << simulator.errorsFileName << endl;
@@ -176,16 +176,13 @@ int main(int argc, char** argv) {
                 fs::create_directory("errors");
                 std::error_code ec;
                 fs::create_directory(output + SEPERATOR + "errors", ec);
-
                 cout << "   created dir: " << output + SEPERATOR + "errors" << "ec = " << ec << endl;
                 ofstream errorsFile(simulator.errorsFileName);
                 for (int i = 1; i <= (1 << 18); i *= 2){
                     cout << "error" << i << endl;
-
                     if ((i & travelErrors) > 0){
                         cout << "error" << i << endl;
                         errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-
                     }
                 }
                 errorsFile << "Travel errors occurred. Skipping travel.";
