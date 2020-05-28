@@ -28,6 +28,7 @@ bool isShipPlanLineValid (const string& line){ //TODO: check limits
     const std::regex regex("\\s*[0-9]\\s*[,]\\s*[0-9]\\s*[,]\\s*[0-9]\\s*");
     if (!(std::regex_match(line, regex))){
         //   INVALID_INPUT("ship plan")
+        cout << "line is bad" << line << endl;
         return false;
         //exit(EXIT_FAILURE);
     }
@@ -55,6 +56,7 @@ int Parser::readShipPlan (ShipPlan& shipPlan, const string& shipPlanFileName){
                 continue;
             if(!isShipPlanLineValid(line)){
                 errors |= (1 << 3);
+                cout << "line is bad" << line << endl;
                 return errors;
             } else{
                 vector<string> temp;
@@ -404,11 +406,8 @@ int findCurrPortIndex(const ShipRoute& shipRoute, const string& portSymbol, int 
     int counter = 0;
     int currPortIndex = -1;
 
-    cout << "visit num of " << portSymbol << visitNum << endl;
-
     for (const Port& port : shipRoute.getPortsList()){
         currPortIndex++;
-        cout << "curr port id is " << port.Port::getPortId() << endl;
         if (portSymbol == port.Port::getPortId()){
             counter++;
             if (counter == visitNum)

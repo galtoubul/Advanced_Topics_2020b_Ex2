@@ -65,8 +65,6 @@ vector<Travel>& getTravelsVec(){
     int checkUnloadInstruction(int x, int y, int floor, Container* container,
                                vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString);
 
-    void writeNotLegalOperation(const string&);
-
     void initTravelsVec(const string& travelsPath);
 	
 };

@@ -179,9 +179,15 @@ int main(int argc, char** argv) {
 
                 cout << "   created dir: " << output + SEPERATOR + "errors" << "ec = " << ec << endl;
                 ofstream errorsFile(simulator.errorsFileName);
-                for (int i = 1; i <= (1 << 18); i *= 2)
-                    if ((i & travelErrors) > 0)
+                for (int i = 1; i <= (1 << 18); i *= 2){
+                    cout << "error" << i << endl;
+
+                    if ((i & travelErrors) > 0){
+                        cout << "error" << i << endl;
                         errorsFile << ErrorsInterface::errorsMap[i] << "\n";
+
+                    }
+                }
                 errorsFile << "Travel errors occurred. Skipping travel.";
                 errorsFile.close();
                 clearData(simulator.shipPlan, simulator.shipRoute);

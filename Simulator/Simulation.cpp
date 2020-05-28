@@ -225,10 +225,6 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
     return VALID;
 }
 
-void Simulator::writeNotLegalOperation(const string&){
-    //TODO: write func
-}
-
 int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString) {
     cout << "startTravel: " << endl;
     int errors = 0;
@@ -236,7 +232,6 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
     Simulator::currPortIndex = 0;
     Simulator::algorithmActionsCounter = 0;
     for (const Port& port : this->shipRoute.getPortsList()) {
-        cout << "startTravel:   ports' for loop - 1st line" << endl;
         Simulator::currPortIndex++;
 
         //finding portVisitNum
@@ -247,7 +242,6 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
 
         string inputFileName, outputFileName;
         getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travel.getDir().string());
-        cout << "startTravel:   ports' for loop:    inputFileName = " << inputFileName << endl;
 
         vector<Container *> containersAwaitingAtPort;
 

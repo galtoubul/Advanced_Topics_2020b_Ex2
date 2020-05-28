@@ -38,6 +38,7 @@ int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and
     int visitNum = calcVisitNum (input_full_path_and_file_name);
     size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
     vector<INSTRUCTION> instructions;
+    cout << "currPortIndex= " << currPortIndex << "portSymbol= " << portSymbol << endl;
     getUnloadingInstructions(instructions, currPortIndex);
     bool isFinalPort = currPortIndex == shipRoute.getPortsList().size() -1;
     vector<Container*> containersAwaitingAtPort;
@@ -51,7 +52,10 @@ int _308394642_b::getInstructionsForCargo(const std::string& input_full_path_and
 
 
 void _308394642_b::getUnloadingInstructions(vector<INSTRUCTION>& instructions, int currPortIndex){
+    cout << "inside getUnloadingInstructions" << endl;
+    cout << "shipRoute.getPortsList()[currPortIndex].getContainersToUnload() = " << shipRoute.getPortsList()[currPortIndex].getContainersToUnload().size() << endl;
     for (Container* container : shipRoute.getPortsList()[currPortIndex].getContainersToUnload()){
+        cout << "trying to unload " << container->getId() << endl;
         unloadToPort(container, instructions);
     }
 }
@@ -59,7 +63,7 @@ void _308394642_b::getUnloadingInstructions(vector<INSTRUCTION>& instructions, i
 void _308394642_b::unloadToPort(Container* container, vector<INSTRUCTION>& instructions){
     size_t floorOfContainer, x, y;
     std::tie(x, y, floorOfContainer) = container->getLocation();
-
+    cout << "inside unloadtoport" << endl;
     size_t currFloor = this->shipPlan.getContainers()[x][y].size() - 1; //start from highest floor of x,y
     vector<INSTRUCTION> containersToLoadBack;
     Container* currContainer;
@@ -176,6 +180,7 @@ void _308394642_b::loadToShip(Container* container, vector<INSTRUCTION>& instruc
 
                         instructions.emplace_back('L', container->getId(), floor, x, y, -1, -1, -1);
                         (const_cast<Port&>(shipRoute.getPortsList()[findPortIndex(this->shipRoute, portDest, currPortIndex)])).addContainerToUnloadToPort(container);
+                        cout << "now const_cast<Port&>(shipRoute.getPortsList()[findPortIndex(this->shipRoute, portDest, currPortIndex)])   " << const_cast<Port&>(shipRoute.getPortsList()[findPortIndex(this->shipRoute, portDest, currPortIndex)]).getContainersToUnload().size() << endl;
                         return;
                     }
                 }
