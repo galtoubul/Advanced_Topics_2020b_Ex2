@@ -15,24 +15,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "ShipPlan.h"
 using std::string;
 using std::vector;
-class Container;
 
 class Port {
     string id;
-    vector<Container*> containersToUnload;
+    vector<Container> containersToUnload;
 
 public:
-
     Port(const string& _portId = "UNINITIALIZED") : id(_portId) {}
-
     const string& getPortId() const;
-
-    void addContainerToUnloadToPort(Container* container);
-
-    const vector<Container*>& getContainersToUnload() const;
-
+    void addContainerToUnloadToPort(Container& container);
+    vector<Container>& getContainersToUnload();
     friend std::ostream& operator<<(std::ostream& out, const Port& port);
-
+    void removeContainer(const string& containerID);
+    bool isStillOnPort(const string& containerID);
 };

@@ -11,7 +11,7 @@ class ShipRoute{
 public:
     ShipRoute () : portsList() {}
 
-    const vector<Port>& getPortsList() const;
+    vector<Port>& getPortsList();
 
     void addPort(const string& portId);
 

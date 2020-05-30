@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <memory>
-#include "../Interfaces/AbstractAlgorithm.h"
+#include "AbstractAlgorithm.h"
 
 class AlgorithmRegistration {
 public:

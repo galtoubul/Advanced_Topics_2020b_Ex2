@@ -4,7 +4,7 @@
 using std::unordered_map;
 using std::vector;
 
-const vector<Port>& ShipRoute::getPortsList() const{
+vector<Port>& ShipRoute::getPortsList(){
     return this->portsList;
 }
 

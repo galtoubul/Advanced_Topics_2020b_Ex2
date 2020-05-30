@@ -40,3 +40,6 @@ AlgorithmRegistration.o: $(INTERFACES)/AlgorithmRegistration.h AlgorithmRegistra
 
 clean:
 	rm -f $(OBJS) $(EXEC)
+
+
+

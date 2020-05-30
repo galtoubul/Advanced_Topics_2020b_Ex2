@@ -5,15 +5,28 @@ const string& Port::getPortId() const{
     return this->id;
 }
 
-void Port::addContainerToUnloadToPort(Container* container) {
+void Port::addContainerToUnloadToPort(Container& container) {
     containersToUnload.push_back(container);
 }
 
-const vector<Container*>& Port::getContainersToUnload() const{
+vector<Container>& Port::getContainersToUnload(){
     return containersToUnload;
 }
 
 std::ostream&operator<<(std::ostream& out, const Port& port){
     out << "id: " << port.id;
     return out;
+}
+
+void Port::removeContainer(const string& containerID){
+    for (int i = 0; i < (int) containersToUnload.size(); ++i)
+        if(containersToUnload[i].getId() == containerID)
+            containersToUnload.erase(containersToUnload.begin() + i);
+}
+
+bool Port::isStillOnPort(const string& containerID){
+    for (int i = 0; i < (int) containersToUnload.size(); ++i)
+        if(containersToUnload[i].getId() == containerID)
+            return true;
+    return false;
 }

@@ -1,5 +1,21 @@
 #include "ShipPlan.h"
 
+void ShipPlan::init(int _dimX, int _dimY, int _floorsNum){
+    dimX = _dimX;
+    dimY = _dimY;
+    floorsNum = _floorsNum;
+    for(int k = 0; k < dimX; k++){
+        vector<vector<std::unique_ptr<Container>>> row;
+        for(int i = 0; i < dimY; i++){
+            vector<std::unique_ptr<Container>> col;
+            for (int j = 0; j < _floorsNum; j++)
+                col.push_back(std::unique_ptr<Container>());
+            row.push_back(std::move(col));
+        }
+        containers.push_back(std::move(row));
+    }
+}
+
 int ShipPlan::getFloorsNum() const{
     return floorsNum;
 }
@@ -13,19 +29,20 @@ int ShipPlan::getPivotYDimension() const{
 }
 
 const VVVC& ShipPlan::getContainers() const{
-    return this->containers;
+    return containers;
 }
 
-void ShipPlan::setContainers(int x, int y, int floor, Container* container){
-    this->containers[x][y][floor] = container;
-    if (container == nullptr)
-        return;
-    containers[x][y][floor]->setLocation(x, y, floor);
+void ShipPlan::setContainers(int x, int y, int floor, Container& container){
+    container.setLocation(x, y, floor);
+    containers[x][y][floor] = std::make_unique<Container>(container);
+}
+
+void ShipPlan::addFutileContainer(int x, int y, int floor){
+    containers[x][y][floor] = std::make_unique<Container>(Container());
 }
 
 void ShipPlan::removeContainer (int x, int y, int floor){
-    free(this->containers[x][y][floor]);
-    this->containers[x][y][floor] = nullptr;
+    containers[x][y][floor].reset();
 }
 
 void ShipPlan::printShipPlan () const {

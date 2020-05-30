@@ -15,10 +15,7 @@ using std::endl;
 #define ERROR -1
 #define VALID 1
 #define CANNOTRUNTRAVEL ((1 << 3) | (1 <<4) | (1 << 7) | (1 << 8))
-
-//int Simulator::algorithmActionsCounter;
-//size_t Simulator::currPortIndex;
-//std::map<int, std::string> ErrorsInterface::errorsMap;
+#define SEPERATOR string(1, fs::path::preferred_separator)
 
 inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<VVVC&>(shipPlan.getContainers()).clear();
@@ -36,27 +33,21 @@ fs::path getPath(fs::directory_entry entry, const string& lookFor, const string&
     return "";
 }
 
-void Simulator::initTravelsVec(const string& travelsPath){
+vector<Travel>& Simulator::initTravelsVec(const string& travelsPath){
     std::error_code ec;
     int index = 1;
-    cout << "initTravelsVec:    travelsPath = " << travelsPath << endl;
     for (const auto& entry : fs::directory_iterator(travelsPath, ec)){
-        cout << "       inside " << entry.path().string() << endl;
         if(entry.is_directory()){
-            cout << "       " << entry.path().string() << " is a DIR" << endl;
             fs::path shipPlanPath = getPath(entry, ".ship_plan.txt", ".ship_plan");
-            cout << "           its shipPlanPath: " << shipPlanPath.string() << endl;
             fs::path shipRoutePath = getPath(entry, ".route.txt", ".route");
-            cout << "           its shipRoutePath: " << shipRoutePath.string() << endl;
             if(shipPlanPath.string().empty() || shipRoutePath.string().empty())
                 continue;
             travelsVec.emplace_back(index, shipPlanPath, shipRoutePath, entry);
-            cout << "           new travel was emplaced at travelsVec. \n its curr size: " << travelsVec.size() << endl;
             index++;
         }
     }
+    return travelsVec;
 }
-
 
 void Simulator::setWeightBalanceCalculator(WeightBalanceCalculator& _calculator){
     this->calculator = _calculator;
@@ -69,71 +60,68 @@ int Simulator::getInput(const string& shipPlanFileName, const string& shipRouteF
     return errors;
 }
 
-int Simulator::checkLoadInstruction(int x, int y, int floor, Container* container, string& algorithmErrorString){
+int Simulator::checkLoadInstruction(int x, int y, int floor, Container& container, string& algorithmErrorString){
     if(shipPlan.getContainers()[x][y][floor] != nullptr && shipPlan.getContainers()[x][y][floor]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor, x, y, "this location is blocked");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Loading", container.getId(), floor, x, y, "this location is blocked");
         return ERROR;
     } else if (shipPlan.getContainers()[x][y][floor] != nullptr && !shipPlan.getContainers()[x][y][floor]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor, x, y, "this location is occupied by another container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Loading", container.getId(), floor, x, y, "this location is occupied by another container");
         return ERROR;
     }else if (shipPlan.getContainers()[x][y][floor - 1] == nullptr){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor, x, y, "there isn't any container under the loaded container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Loading", container.getId(), floor, x, y, "there isn't any container under the loaded container");
         return ERROR;
-    } else if (calculator.tryOperation('L', container->getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor, x, y, "the operation isn't approved by the weight balance calculator");
+    } else if (calculator.tryOperation('L', container.getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = Errors::buildNotLegalOperationError("Loading", container.getId(), floor, x, y, "the operation isn't approved by the weight balance calculator");
         return ERROR;
     } else{
-        this->shipPlan.setContainers(x, y, floor, new Container(container));
-        delete(container);
+        shipPlan.setContainers(x, y, floor, container);
+        container.setLocation(x, y, floor);
         return VALID;
     }
 }
 
-int Simulator::checkMoveInstruction(int x1, int y1, int floor1, int x2, int y2, int floor2, Container* container, string& algorithmErrorString){
+int Simulator::checkMoveInstruction(int x1, int y1, int floor1, int x2, int y2, int floor2, Container& container, string& algorithmErrorString){
     if (shipPlan.getContainers()[x1][y1][floor1]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor1, x1, y1, "this location is blocked");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Moving", container.getId(), floor1, x1, y1, "this location is blocked");
         return ERROR;
     } else if (floor1 != (int)shipPlan.getContainers()[x1][y1].size() - 1 && shipPlan.getContainers()[x1][y1][floor1 + 1] != nullptr){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor1, x1, y1, "there are containers above the unloaded container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Moving", container.getId(), floor1, x1, y1, "there are containers above the unloaded container");
         return ERROR;
-    } else if (calculator.tryOperation('U', container->getWeight(), x1, y1) != WeightBalanceCalculator::APPROVED){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unload", container->getId(), floor1, x1, y1, "the operation isn't approved by the weight balance calculator");
+    } else if (calculator.tryOperation('U', container.getWeight(), x1, y1) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = Errors::buildNotLegalOperationError("Unload", container.getId(), floor1, x1, y1, "the operation isn't approved by the weight balance calculator");
         return ERROR;
     } else if(shipPlan.getContainers()[x2][y2][floor2] != nullptr && shipPlan.getContainers()[x2][y2][floor2]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "this location is blocked");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Moving", container.getId(), floor2, x2, y2, "this location is blocked");
         return ERROR;
     } else if (shipPlan.getContainers()[x2][y2][floor2] != nullptr && !shipPlan.getContainers()[x2][y2][floor2]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "this location is occupied by another container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Moving", container.getId(), floor2, x2, y2, "this location is occupied by another container");
         return ERROR;
     }else if (shipPlan.getContainers()[x2][y2][floor2 - 1] == nullptr){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", container->getId(), floor2, x2, y2, "there isn't any container under the loaded container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Moving", container.getId(), floor2, x2, y2, "there isn't any container under the loaded container");
         return ERROR;
-    } else if (calculator.tryOperation('L', container->getWeight(), x2, y2) != WeightBalanceCalculator::APPROVED){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", container->getId(), floor2, x2, y2, "the operation isn't approved by the weight balance calculator");
+    } else if (calculator.tryOperation('L', container.getWeight(), x2, y2) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = Errors::buildNotLegalOperationError("Loading", container.getId(), floor2, x2, y2, "the operation isn't approved by the weight balance calculator");
         return ERROR;
     } else{
-        this->shipPlan.setContainers(x2, y2, floor2, container);
-        container->setLocation(x2, y2, floor2);
-        this->shipPlan.setContainers(x1, y1, floor1, nullptr);
+        int newX, newY, newZ;std::tie(newX, newY, newZ) = shipPlan.getContainers()[x1][y1][floor1]->getLocation();
+        shipPlan.setContainers(x2, y2, floor2, *shipPlan.getContainers()[x1][y1][floor1]);
+        shipPlan.removeContainer(x1, y1, floor1);
+        std::tie(newX, newY, newZ) = shipPlan.getContainers()[x2][y2][floor2]->getLocation();
         return VALID;
     }
 }
 
-int Simulator::checkUnloadInstruction(int x, int y, int floor, Container* container, vector<Container*>& containersAwaitingAtPort, string& algorithmErrorString){
+int Simulator::checkUnloadInstruction(int x, int y, int floor, Container& container, string& algorithmErrorString){
     if (shipPlan.getContainers()[x][y][floor]->isFutile()){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "this location is blocked");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Unloading", container.getId(), floor, x, y, "this location is blocked");
         return ERROR;
     } else if (floor != (int)shipPlan.getContainers()[x][y].size() - 1 && shipPlan.getContainers()[x][y][floor + 1] != nullptr){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "there are containers above the unloaded container");
+        algorithmErrorString = Errors::buildNotLegalOperationError("Unloading", container.getId(), floor, x, y, "there are containers above the unloaded container");
         return ERROR;
-    } else if (calculator.tryOperation('U', container->getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
-        algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", container->getId(), floor, x, y, "the operation isn't approved by the weight balance calculator");
+    } else if (calculator.tryOperation('U', container.getWeight(), x, y) != WeightBalanceCalculator::APPROVED){
+        algorithmErrorString = Errors::buildNotLegalOperationError("Unloading", container.getId(), floor, x, y, "the operation isn't approved by the weight balance calculator");
         return ERROR;
-    } else {
-        this->shipPlan.setContainers(x, y, floor, nullptr);
-        containersAwaitingAtPort.push_back(new Container(container));
-        return VALID;
-    }
+    } else return VALID;
 }
 
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v"){
@@ -141,80 +129,81 @@ inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v"){
     return s;
 }
 
-int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName,
+int Simulator::checkAndCountAlgorithmActions(vector<Container>& containersAwaitingAtPort, const string& outputFileName,
                                              const string& currPortSymbol, string& algorithmErrorString){
     vector<INSTRUCTION> instructions;
-
     getInstructionsForPort(outputFileName, instructions);
 
-    for (INSTRUCTION instruction : instructions) {
+    for (INSTRUCTION& instruction : instructions) {
         char instructionType;
-        string containerId;
+        string containerIdBeforeTrim;
         int x1, y1, floor1, x2, y2, floor2;
-        std::tie(instructionType, containerId, floor1, x1, y1, floor2, x2, y2) = instruction;
+        std::tie(instructionType, containerIdBeforeTrim, floor1, x1, y1, floor2, x2, y2) = instruction;
+        string containerId = ltrim(containerIdBeforeTrim);
 
-        Container *container = nullptr;
+        Container* container = nullptr;
         if (instructionType == 'R')
             continue;
         else if (instructionType == 'L'){
             algorithmActionsCounter++;
-            vector<Container*> currContainersAwaitingAtPort = containersAwaitingAtPort;
-            int locInVec = -1;
-            for (Container *_container : currContainersAwaitingAtPort) {
-                locInVec++;
-                if (_container->getId() == ltrim(containerId)) {
-                    container = _container;
+
+            // look for the loaded container at containersAwaitingAtPort
+            for (auto& _container : containersAwaitingAtPort) {
+                if (_container.getId() == ltrim(containerId)) {
+                    container = &_container;
                     break;
                 }
             }
-            containersAwaitingAtPort.erase(containersAwaitingAtPort.begin()+locInVec);
+
             if (container == nullptr) {
-                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", containerId, floor1, x1, y1, "this container isn't exist at "+currPortSymbol);
+                algorithmErrorString = Errors::buildNotLegalOperationError("Loading", containerId, floor1, x1, y1, "this container isn't exist at " + currPortSymbol);
                 return ERROR;
             }
-            if (checkLoadInstruction(x1, y1, floor1, container, algorithmErrorString) == ERROR)
+
+            if (checkLoadInstruction(x1, y1, floor1, *container, algorithmErrorString) == ERROR)
                 return ERROR;
+
             continue;
         }
         else if (instructionType == 'U'){
             algorithmActionsCounter++;
-            container = shipPlan.getContainers()[x1][y1][floor1];
-            if (container == nullptr) {
-                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", containerId, floor1, x1, y1,"this container isn't exist at Ship");
+            if (shipPlan.getContainers()[x1][y1][floor1] == nullptr) {
+                algorithmErrorString = Errors::buildNotLegalOperationError("Unloading", containerId, floor1, x1, y1, "this container isn't exist at Ship");
                 return ERROR;
             }
-            if (checkUnloadInstruction(x1, y1, floor1, container, containersAwaitingAtPort, algorithmErrorString) == ERROR)
+            if (checkUnloadInstruction(x1, y1, floor1, *shipPlan.getContainers()[x1][y1][floor1], algorithmErrorString) == ERROR)
                 return ERROR;
+            else{
+                containersAwaitingAtPort.emplace_back(*shipPlan.getContainers()[x1][y1][floor1]);
+                shipPlan.removeContainer(x1, y1, floor1);
+            }
         }
         else if(instructionType == 'M'){
             algorithmActionsCounter++;
-            container = shipPlan.getContainers()[x1][y1][floor1];
-            if (container == nullptr) {
-                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1,"this container isn't exist at Ship");
+            if (shipPlan.getContainers()[x1][y1][floor1] == nullptr) {
+                algorithmErrorString = Errors::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1, "this container isn't exist at Ship");
                 return ERROR;
             }
-            if (checkMoveInstruction(x1, y1, floor1, x2, y2, floor2, container, algorithmErrorString) == ERROR)
+            if (checkMoveInstruction(x1, y1, floor1, x2, y2, floor2, *shipPlan.getContainers()[x1][y1][floor1], algorithmErrorString) == ERROR)
                 return ERROR;
         }
     }
-
-    for (Container* _container : containersAwaitingAtPort) {
-        if (findPortIndex(shipRoute, currPortSymbol, currPortIndex) == NOT_IN_ROUTE)
-            continue;
-        if (_container->getDestination() != currPortSymbol){
-            if(freeSlotsInShip() > 0){
-                algorithmErrorString = ErrorsInterface::buildContainerForgottenError(currPortSymbol);
-                return ERROR;
-            }
+    // look for containers that were unloaded at the current port and shouldn't
+    for (auto& _container : containersAwaitingAtPort) {
+        if (findPortIndex(shipRoute, currPortSymbol, currPortIndex) != NOT_IN_ROUTE &&
+            _container.getDestination() != currPortSymbol && freeSlotsInShip() > 0){
+            algorithmErrorString = Errors::buildContainerForgottenError(currPortSymbol);
+            return ERROR;
         }
     }
 
-    for (int x = 0; x < this->shipPlan.getPivotXDimension(); x++){
-        for (int y = 0; y < this->shipPlan.getPivotYDimension(); y++){
-            for (int floor = 0; floor < this->shipPlan.getFloorsNum(); floor++){
-                if (this->shipPlan.getContainers()[x][y][floor] != nullptr &&
-                    this->shipPlan.getContainers()[x][y][floor]->getDestination() == currPortSymbol){
-                    algorithmErrorString = ErrorsInterface::buildContainerWasntDroppedError(currPortSymbol);
+    // look for containers that weren't unloaded at the current port and should
+    for (int x = 0; x < shipPlan.getPivotXDimension(); x++){
+        for (int y = 0; y < shipPlan.getPivotYDimension(); y++){
+            for (int floor = 0; floor < shipPlan.getFloorsNum(); floor++){
+                if (shipPlan.getContainers()[x][y][floor] != nullptr &&
+                    shipPlan.getContainers()[x][y][floor]->getDestination() == currPortSymbol){
+                    algorithmErrorString = Errors::buildContainerWasntDroppedError(currPortSymbol);
                     return ERROR;
                 }
             }
@@ -223,12 +212,13 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwait
     return VALID;
 }
 
-int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString) {
-    cout << "startTravel:   travel's num = " << travel.getIndex() << endl;
+int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString, const string& output) {
+    string travelAlgorithmDir = output + SEPERATOR + "_308394642_b_travel" + to_string(travel.getIndex()) + "_crane_instructions";
+    fs::create_directory(travelAlgorithmDir);
     int errors = 0;
-    Simulator::currPortIndex = 0;
+    Simulator::currPortIndex = -1;
     Simulator::algorithmActionsCounter = 0;
-    for (const Port& port : this->shipRoute.getPortsList()) {
+    for (const Port& port : shipRoute.getPortsList()) {
         Simulator::currPortIndex++;
 
         //finding portVisitNum
@@ -238,15 +228,15 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
                 portVisitNum++;
 
         string inputFileName, outputFileName;
-        getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travel.getDir().string());
+        getPortFilesName(inputFileName, outputFileName, port.getPortId(), portVisitNum, travel, travelAlgorithmDir);
 
-        vector<Container*> containersAwaitingAtPort;
+        // simulator is reading which containers are waiting on port
+        vector<Container> containersAwaitingAtPort;
+        bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
+        readContainersAwaitingAtPort(inputFileName, isFinalPort, containersAwaitingAtPort, shipPlan, shipRoute, currPortIndex); //TODO: what about the status?
 
-        //bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
-        //readContainersAwaitingAtPort(inputFileName, containersAwaitingAtPort, isFinalPort, shipPlan, shipRoute, currPortIndex);
-
+        // algorithm is reading the input and making actions on his ship plan
         //Errors here will be written in the same func of the next step
-
         errors |= algorithm->getInstructionsForCargo(inputFileName, outputFileName);
 
         int status = checkAndCountAlgorithmActions(containersAwaitingAtPort, outputFileName, port.getPortId(), algorithmErrorString);
@@ -261,19 +251,12 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
     return errors;
 }
 
-const ShipPlan& Simulator::getShipPlan () const{
-    return this->shipPlan;
+ShipPlan& Simulator::getShipPlan(){
+    return shipPlan;
 }
 
-const ShipRoute& Simulator::getShipRoute() const{
-    return this->shipRoute;
-}
-
-std::ostream& operator<<(std::ostream& out, const Simulator& simulator){
-    out << "Ship Plan: " << '\n';
-    simulator.getShipPlan().printShipPlan();
-    out << simulator.getShipRoute() << '\n';
-    return out;
+ShipRoute& Simulator::getShipRoute(){
+    return shipRoute;
 }
 
 int Simulator::freeSlotsInShip() {
@@ -286,158 +269,43 @@ int Simulator::freeSlotsInShip() {
     return counter;
 }
 
-//int Simulator::initSimulation (std::pair<std::string, unique_ptr<AbstractAlgorithm>> algorithm, int travelNum){
-//    cout << "inside initSimulation" <<  endl;
-//    if(algorithm.second)   cout << "algorithm " << algorithm.first << " isn't nullptr" << endl;
-//    else            cout << "algorithm is nullptr" << endl;
-//
-//    string travelName = "Travel" + std::to_string(travelNum);
-//
-//    errorsFileName = "output" + string(1, std::filesystem::path::preferred_separator) +
-//                     "errors" + string(1, std::filesystem::path::preferred_separator) +
-//                     travelName + "_" + algorithm.first + ".errors.txt";
-//
-//    string shipPlanPath = travelName +  std::string(1, std::filesystem::path::preferred_separator) + "Ship Plan.txt";
-//    string shipRoutePath = travelName + std::string(1, std::filesystem::path::preferred_separator) + "Route.txt";
-//    this->getInput(shipPlanPath, shipRoutePath);
-//
-//    cout << "1" << endl;
-//    int travelErrors = this->getInput(shipPlanPath, shipRoutePath);
-//
-//    cout << "2" << endl;
-//    if ((CANNOTRUNTRAVEL & travelErrors) != 0) {
-//        ofstream errorsFile(errorsFileName);
-//        for (int i = 1; i <= (1 << 18); i *= 2) {
-//            if ((i & travelErrors) > 0) {
-//                errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-//            }
-//        }
-//        errorsFile << "Travel errors occurred. Skipping travel.";
-//        errorsFile.close();
-//        clearData(this->shipPlan, this->shipRoute);
-//        return -1;
-//    }
-//    cout << "3" << endl;
-//    int errorsOfAlgorithm = 0;
-//    errorsOfAlgorithm |= algorithm.second->readShipPlan(shipPlanPath);
-//    errorsOfAlgorithm |= algorithm.second->readShipRoute(shipRoutePath);
-//    cout << "4" << endl;
-//    WeightBalanceCalculator _calculator;
-//    algorithm.second->setWeightBalanceCalculator(_calculator);
-//    setWeightBalanceCalculator(_calculator);
-//    cout << "5" << endl;
-//    string algorithmErrorString;
-//
-//    errorsOfAlgorithm |= startTravel(std::move(algorithm), travelName, algorithmErrorString);
-//
-//    //TODO: errors of Bad algorithm behavior
-//    if (errorsOfAlgorithm != 0) {
-//        cout << "11" << endl;
-//        clearData(this->shipPlan, this->shipRoute);
-//
-//        ofstream errorsFile(errorsFileName);
-//        for (int i = 1; i <= (1 << 18); i *= 2) {
-//            if ((i & errorsOfAlgorithm) > 0) {
-//                errorsFile << ErrorsInterface::errorsMap[i] << "\n";
-//            }
-//        }
-//        cout << "12" << endl;
-//
-//        if ((errorsOfAlgorithm & (1 << 19)) > 0) {
-//            errorsFile << algorithmErrorString;
-//            errorsFile.close();
-//            return -1;
-//        }
-//        cout << "13" << endl;
-//
-//        errorsFile.close();
-//    }
-//    cout << travelName << " was ended successfully for algorithm " << algorithm.first
-//         << " .The number of algorithm operations: " << algorithmActionsCounter << endl;
-//
-//    clearData(this->shipPlan, this->shipRoute);
-//    return 0;
-//}
+void Simulator::makeTravelError(int travelErrors, const string& output, tuple<string,vector<int>,int,int> algoTuple, int& numErrors){
+    std::error_code ec;
+    fs::create_directory(output + SEPERATOR + "errors", ec);
+    ofstream errorsFile(errorsFileName);
+    for (int i = 1; i <= (1 << 18); i *= 2){
+        if ((i & travelErrors) > 0)
+            errorsFile << Errors::errorsMap[i] << "\n";
+    }
+    errorsFile << "Travel errors occurred. Skipping travel.";
+    errorsFile.close();
+    clearData(shipPlan, shipRoute);
+    get<1>(algoTuple).push_back(-1);
+    numErrors += 1;
+}
 
+bool compareAlgoTuples(tuple<string,vector<int>,int,int> x, tuple<string,vector<int>,int,int> y){
+    if (get<3>(x) == get<3>(y)){
+        return (get<2>(x) < get<2>(y));
+    }
+    else{
+        return (get<3>(x) < get<3>(y));
+    }
+}
 
-//int Simulator::checkAndCountAlgorithmActions(vector<Container*>& containersAwaitingAtPort, const string& outputFileName,
-//                                             const string& currPortSymbol, string& algorithmErrorString){
-//    vector<INSTRUCTION> instructions;
-//    getInstructionsForPort(outputFileName, instructions);
-//    for (INSTRUCTION instruction : instructions) {
-//        char instructionType;
-//        string containerId;
-//        int x1, y1, floor1;
-//        std::tie(instructionType, containerId, floor1, x1, y1) = instruction;
-//
-//        Container *container = nullptr;
-//        if (instructionType == 'R')
-//            continue;
-//        else if (instructionType == 'L'){
-//            algorithmActionsCounter++;
-//            vector<Container*> currContainersAwaitingAtPort = containersAwaitingAtPort;
-//            int locInVec = -1;
-//            for (Container *_container : currContainersAwaitingAtPort) {
-//                locInVec++;
-//                if (_container->getId() == ltrim(containerId)) {
-//                    container = _container;
-//                    break;
-//                }
-//            }
-//            containersAwaitingAtPort.erase(containersAwaitingAtPort.begin()+locInVec);
-//            if (container == nullptr) {
-//                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Loading", containerId, floor1, x1, y1, "this container isn't exist at "+currPortSymbol);
-//                return ERROR;
-//            }
-//            if (checkLoadInstruction(x1, y1, floor1, container, algorithmErrorString) == ERROR)
-//                return ERROR;
-//            continue;
-//        }
-//        else if (instructionType == 'U'){
-//            algorithmActionsCounter++;
-//            container = shipPlan.getContainers()[x1][y1][floor1];
-//            if (container == nullptr) {
-//                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Unloading", containerId, floor1, x1, y1,"this container isn't exist at Ship");
-//                return ERROR;
-//            }
-//            if (checkUnloadInstruction(x1, y1, floor1, container, containersAwaitingAtPort, algorithmErrorString) == ERROR)
-//                return ERROR;
-//        }
-////        else if(instructionType == 'M'){
-////
-////            algorithmActionsCounter++;
-////
-////            container = shipPlan.getContainers()[x1][y1][floor1];
-////            if (container == nullptr) {
-////                algorithmErrorString = ErrorsInterface::buildNotLegalOperationError("Moving", containerId, floor1, x1, y1,"this container isn't exist at Ship");
-////                return ERROR;
-////            }
-////            if (checkMoveInstruction(x1, y1, floor1, x2, y2, floor2, container, algorithmErrorString) == ERROR)
-////                return ERROR;
-////        }
-//    }
-//
-//    for (Container* _container : containersAwaitingAtPort) {
-//        if (findPortIndex(shipRoute, currPortSymbol, currPortIndex) == NOT_IN_ROUTE)
-//            continue;
-//        if (_container->getDestination() != currPortSymbol){
-//            if(freeSlotsInShip() > 0){
-//                algorithmErrorString = ErrorsInterface::buildContainerForgottenError(currPortSymbol);
-//                return ERROR;
-//            }
-//        }
-//    }
-//
-//    for (int x = 0; x < this->shipPlan.getPivotXDimension(); x++){
-//        for (int y = 0; y < this->shipPlan.getPivotYDimension(); y++){
-//            for (int floor = 0; floor < this->shipPlan.getFloorsNum(); floor++){
-//                if (this->shipPlan.getContainers()[x][y][floor] != nullptr &&
-//                    this->shipPlan.getContainers()[x][y][floor]->getDestination() == currPortSymbol){
-//                    algorithmErrorString = ErrorsInterface::buildContainerWasntDroppedError(currPortSymbol);
-//                    return ERROR;
-//                }
-//            }
-//        }
-//    }
-//    return VALID;
-//}
+void Simulator::createSimulationResults(ofstream& simulationResults, vector<tuple<string,vector<int>,int,int>> outputVector){
+    sort(outputVector.begin(), outputVector.end(), compareAlgoTuples);
+    for (tuple<string,vector<int>,int,int> algoTuple : outputVector){
+        if (simulationResults.is_open()){
+            simulationResults << get<0>(algoTuple) + ",";
+            simulationResults.flush();
+            for (int travelOpNum : get<1>(algoTuple)){
+                simulationResults << to_string(travelOpNum) + ",";
+                simulationResults.flush();
+            }
+            if (simulationResults.is_open())
+                simulationResults << to_string(get<2>(algoTuple)) + "," << to_string(get<3>(algoTuple)) + "\n";
+        }
+    }
+    simulationResults.close();
+}

@@ -7,14 +7,12 @@
 #include <functional>
 #include <memory>
 #include "../Interfaces/AbstractAlgorithm.h"
-
 using std::function;
 using std::unique_ptr;
 using std::vector;
 
 class Registrar{
-    struct DlCloser
-    {
+    struct DlCloser{
         void operator()(void *dlhandle) const noexcept;
     };
 

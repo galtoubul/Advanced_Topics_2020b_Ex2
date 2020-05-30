@@ -6,13 +6,11 @@ Registrar Registrar::registrar;
 
 void Registrar::DlCloser::operator()(void *dlhandle) const noexcept
 {
-    std::cout << "Closing dl\n";
     dlclose(dlhandle);
 }
 
 Registrar& Registrar::getRegistrar(){
-    static Registrar instance;
-    return instance;
+    return registrar;
 }
 
 Registrar::~Registrar(){
@@ -47,11 +45,3 @@ bool Registrar::loadAlgorithmFromFile(const char* filePath, std::string& error, 
         return false;
     }
 }
-
-//vector<unique_ptr<AbstractAlgorithm>> Registrar::getAlgorithmVector(){
-//    vector <unique_ptr<AbstractAlgorithm>> algorithmVec;
-//    for(auto& algorithmFactory : factoryVec)
-//        algorithmVec.push_back(algorithmFactory());
-//
-//    return algorithmVec;
-//}

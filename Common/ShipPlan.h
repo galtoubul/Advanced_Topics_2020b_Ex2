@@ -1,10 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <memory>
 #include "Container.h"
 using std::vector;
-typedef vector<Container*> VC;
-typedef vector<vector<Container*>> VVC;
-typedef vector<vector<vector<Container*>>> VVVC;
+typedef vector<vector<vector<std::unique_ptr<Container>>>> VVVC;
 #define NOT_IN_ROUTE -2
 
 class ShipPlan{
@@ -16,9 +15,7 @@ class ShipPlan{
 public:
     explicit ShipPlan() : dimX(NOT_ON_SHIP), dimY(NOT_ON_SHIP), floorsNum(NOT_ON_SHIP) {}
 
-    ShipPlan(int _dimX, int _dimY, int _floorsNum) :
-            dimX(_dimX), dimY(_dimY), floorsNum(_floorsNum),
-            containers(dimX, VVC(dimY, VC (_floorsNum, nullptr))) {}
+    void init(int _dimX, int _dimY, int _floorsNum);
 
     ShipPlan(const ShipPlan& other) = delete;
 
@@ -30,7 +27,9 @@ public:
 
     const VVVC& getContainers() const;
 
-    void setContainers(int x, int y, int floor, Container* container);
+    void setContainers(int x, int y, int floor, Container& container);
+
+    void addFutileContainer(int x, int y, int floor);
 
     void removeContainer (int x, int y, int floorNum);
 
