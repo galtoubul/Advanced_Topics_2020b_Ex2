@@ -70,7 +70,7 @@ inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
 }
 
 ofstream initSimulationResults(const string& output, int travelNum){
-    ofstream simulationResults(output + SEPERATOR + "simulation.results.csv");
+    ofstream simulationResults(output + SEPERATOR + "simulation.results");
     simulationResults << "RESULTS,";
     for (int j = 1; j <= travelNum; ++j)
         simulationResults << "travel "+ to_string(j) +",";
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
         for(Travel& travel : travelsVec){
             unique_ptr<AbstractAlgorithm> alg = algorithm.second();
             simulator.setErrorsFileName(output + SEPERATOR + "errors" + SEPERATOR +
-                                        algorithm.first + "_" + to_string(travel.getIndex()) + ".errors.txt");
+                                        algorithm.first + "_" + to_string(travel.getIndex()) + ".errors");
             int travelErrors = simulator.getInput(travel.getShipPlanPath().string(), travel.getShipRoutePath().string());
             if ((CANNOTRUNTRAVEL & travelErrors) != 0) {
                 simulator.makeTravelError(travelErrors, output, algoTuple, numErrors);
@@ -131,9 +131,10 @@ int main(int argc, char** argv) {
             int errorsOfAlgorithm = 0;
             errorsOfAlgorithm |= alg->readShipPlan(travel.getShipPlanPath().string());
             errorsOfAlgorithm |= alg->readShipRoute(travel.getShipRoutePath().string());
+            if (errorsOfAlgorithm != 0) continue;
 
             string algorithmErrorString;
-            errorsOfAlgorithm |= simulator.startTravel(alg.get(), travel, algorithmErrorString, output);
+            errorsOfAlgorithm |= simulator.startTravel(alg.get(), algorithm.first, travel, algorithmErrorString, output);
 
             if (errorsOfAlgorithm != 0) {
                 std::error_code ec;

@@ -22,12 +22,11 @@ inline void clearData(ShipPlan& shipPlan, ShipRoute& shipRoute){
     const_cast<vector<Port>&>(shipRoute.getPortsList()).clear();
 }
 
-fs::path getPath(fs::directory_entry entry, const string& lookFor, const string& lookFor2){
+fs::path getPath(fs::directory_entry entry, const string& lookFor){
     std::error_code ec;
     for (const auto& file : fs::directory_iterator(entry, ec)) {
         string fileName = file.path().string();
-        if(fileName.substr(fileName.size() - lookFor.size()) == lookFor ||
-           fileName.substr(fileName.size() - lookFor2.size()) == lookFor2)
+        if(fileName.substr(fileName.size() - lookFor.size()) == lookFor)
             return file;
     }
     return "";
@@ -38,8 +37,8 @@ vector<Travel>& Simulator::initTravelsVec(const string& travelsPath){
     int index = 1;
     for (const auto& entry : fs::directory_iterator(travelsPath, ec)){
         if(entry.is_directory()){
-            fs::path shipPlanPath = getPath(entry, ".ship_plan.txt", ".ship_plan");
-            fs::path shipRoutePath = getPath(entry, ".route.txt", ".route");
+            fs::path shipPlanPath = getPath(entry, ".ship_plan");
+            fs::path shipRoutePath = getPath(entry, ".route");
             if(shipPlanPath.string().empty() || shipRoutePath.string().empty())
                 continue;
             travelsVec.emplace_back(index, shipPlanPath, shipRoutePath, entry);
@@ -55,8 +54,8 @@ void Simulator::setWeightBalanceCalculator(WeightBalanceCalculator& _calculator)
 
 int Simulator::getInput(const string& shipPlanFileName, const string& shipRouteFileName){
     int errors = 0;
-    errors |= Parser::readShipPlan(this->shipPlan, shipPlanFileName);
-    errors |= Parser::readShipRoute(this->shipRoute, shipRouteFileName);
+    errors |= Parser::readShipPlan(shipPlan, shipPlanFileName);
+    errors |= Parser::readShipRoute(shipRoute, shipRouteFileName);
     return errors;
 }
 
@@ -212,8 +211,8 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container>& containersAwaiti
     return VALID;
 }
 
-int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString, const string& output) {
-    string travelAlgorithmDir = output + SEPERATOR + "_308394642_b_travel" + to_string(travel.getIndex()) + "_crane_instructions";
+int Simulator::startTravel (AbstractAlgorithm* algorithm, const string& algName, Travel& travel, string& algorithmErrorString, const string& output) {
+    string travelAlgorithmDir = output + SEPERATOR + algName + to_string(travel.getIndex()) + "_crane_instructions";
     fs::create_directory(travelAlgorithmDir);
     int errors = 0;
     Simulator::currPortIndex = -1;
@@ -224,7 +223,7 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
         //finding portVisitNum
         int portVisitNum = 0;
         for (size_t i = 0; i <= Simulator::currPortIndex; ++i)
-            if (this->shipRoute.getPortsList()[i].getPortId() == port.getPortId())
+            if (shipRoute.getPortsList()[i].getPortId() == port.getPortId())
                 portVisitNum++;
 
         string inputFileName, outputFileName;
@@ -232,8 +231,8 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, Travel& travel, string
 
         // simulator is reading which containers are waiting on port
         vector<Container> containersAwaitingAtPort;
-        bool isFinalPort = currPortIndex == this->shipRoute.getPortsList().size();
-        readContainersAwaitingAtPort(inputFileName, isFinalPort, containersAwaitingAtPort, shipPlan, shipRoute, currPortIndex); //TODO: what about the status?
+        bool isFinalPort = currPortIndex == shipRoute.getPortsList().size();
+        readContainersAwaitingAtPort(inputFileName, isFinalPort, containersAwaitingAtPort, shipPlan, shipRoute, currPortIndex);
 
         // algorithm is reading the input and making actions on his ship plan
         //Errors here will be written in the same func of the next step

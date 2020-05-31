@@ -38,7 +38,7 @@ public:
 
     int getInput(const string& shipPlanFileName, const string& shipRouteFileName);
 
-    int startTravel (AbstractAlgorithm* algorithm, Travel& travel, string& algorithmErrorString, const string& output);
+    int startTravel (AbstractAlgorithm* algorithm, const string& algName, Travel& travel, string& algorithmErrorString, const string& output);
 
     ShipPlan& getShipPlan();
 

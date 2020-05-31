@@ -1,7 +1,7 @@
 #include "AlgorithmsBaseClass.h"
 #include <filesystem>
 #include <string>
-#define PORT_SYMBOL_LENGTH 6
+#define PORT_SYMBOL_LENGTH 5
 #define SEPARATOR std::filesystem::path::preferred_separator
 using std::string;
 using std::cout;
@@ -30,7 +30,7 @@ int AlgorithmsBaseClass::calcVisitNum (const string& input_full_path_and_file_na
 int AlgorithmsBaseClass::getInstructionsForCargo(const std::string& input_full_path_and_file_name, const std::string& output_full_path_and_file_name){
     string portSymbol = input_full_path_and_file_name.substr(input_full_path_and_file_name.find_last_of(SEPARATOR) + 1, PORT_SYMBOL_LENGTH);
     int visitNum = calcVisitNum (input_full_path_and_file_name);
-    size_t currPortIndex = findCurrPortIndex(this->shipRoute, portSymbol, visitNum);
+    size_t currPortIndex = findCurrPortIndex(shipRoute, portSymbol, visitNum);
     vector<INSTRUCTION> instructions;
 
     getUnloadingInstructions(instructions, currPortIndex);
@@ -59,12 +59,12 @@ void AlgorithmsBaseClass::getLoadingInstructions(vector<INSTRUCTION>& instructio
         , int currPortIndex){
     for (auto& container : containersAwaitingAtPort){
         string portDest = container.getDestination();
-        if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) // TODO: what about other errors? such as the erros at the PDF?
+        if (findPortIndex(this->shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE)
             instructions.emplace_back('R', container.getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
     }
     vector<Container> sortedContainersAwaitingAtPort;
     orderContainersByDest(containersAwaitingAtPort, sortedContainersAwaitingAtPort, shipRoute, currPortIndex);
-    for (auto& container : sortedContainersAwaitingAtPort){ // TODO: isn't that a repeat (1)?
+    for (auto& container : sortedContainersAwaitingAtPort){
         if (container.isRejected()){
             instructions.emplace_back('R', container.getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
             continue;
@@ -75,7 +75,7 @@ void AlgorithmsBaseClass::getLoadingInstructions(vector<INSTRUCTION>& instructio
 
 void AlgorithmsBaseClass::loadToShip(Container& container, vector<INSTRUCTION>& instructions, int currPortIndex){
     string portDest = container.getDestination();
-    if (findPortIndex(shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) { // TODO: isn't that a repeat (2)?
+    if (findPortIndex(shipRoute, portDest, currPortIndex) == NOT_IN_ROUTE) {
         instructions.emplace_back('R', container.getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
         return;
     }

@@ -21,12 +21,12 @@ public:
     AlgorithmsBaseClass() : shipPlan(), shipRoute(), calculator() {}
 
     int readShipPlan(const std::string& full_path_and_file_name) override{
-        errors |= Parser::readShipPlan(this->shipPlan, full_path_and_file_name);
+        errors |= Parser::readShipPlan(shipPlan, full_path_and_file_name);
         return errors;
     }
 
     int readShipRoute(const std::string& full_path_and_file_name) override{
-        errors |= Parser::readShipRoute(this->shipRoute, full_path_and_file_name);
+        errors |= Parser::readShipRoute(shipRoute, full_path_and_file_name);
         return errors;
     }
 

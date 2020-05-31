@@ -119,8 +119,8 @@ int Parser::readShipPlan (ShipPlan& shipPlan, const string& shipPlanFileName){
 }
 
 int checkIfValidPortId(string port){
-    //have to be in model of: XX XXX - size 6
-    const std::regex regex("\\s*[a-zA-z]{2}[ ][a-zA-z]{3}\\s*");
+    //have to be in model of: XXXXX - size 5
+    const std::regex regex("\\s*[a-zA-z]{5}\\s*");
     if (!(std::regex_match(port, regex)))
         return (1 << 13); // error code for "containers at port"
     return 0;
@@ -157,7 +157,7 @@ int Parser::readShipRoute(ShipRoute& shipRoute, const string& shipPlanFileName){
                 continue;
 
             line = trim(line);
-            if (checkIfValidPortId(line) != 0){ //has to be in model of: XX XXX - size 6
+            if (checkIfValidPortId(line) != 0){ //has to be in model of: XXXXX - size 5
                 errors |= (1 << 6);
                 continue;
             }
@@ -190,11 +190,11 @@ inline bool fileExists (const std::string& fileName) {
 }
 
 void getPortFilesName(string& inputFileName, string& outputFileName, const string& portId, const int portVisitNum, Travel& travel, const string& dir){
-    inputFileName = travel.getDir().string() + SEPERATOR + portId + "_" + to_string(portVisitNum) + ".cargo_data.txt";
+    inputFileName = travel.getDir().string() + SEPERATOR + portId + "_" + to_string(portVisitNum) + ".cargo_data";
     if (!fs::exists(inputFileName))
         ofstream outfile (inputFileName);
 
-    outputFileName = dir + SEPERATOR + portId + "_" + to_string(portVisitNum) + ".crane_instructions.txt";
+    outputFileName = dir + SEPERATOR + portId + "_" + to_string(portVisitNum) + ".crane_instructions";
 }
 
 int validateWeight (const string& line){
