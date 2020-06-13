@@ -131,6 +131,10 @@ inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v"){
 int Simulator::checkAndCountAlgorithmActions(vector<Container>& containersAwaitingAtPort, const string& outputFileName,
                                              const string& currPortSymbol, string& algorithmErrorString){
     vector<INSTRUCTION> instructions;
+    if(!std::filesystem::exists(outputFileName)){
+        algorithmErrorString =  "ERROR: Unable to open file: " + outputFileName + "\nLeaving current travel...\n";
+        return ERROR;
+    }
     getInstructionsForPort(outputFileName, instructions);
 
     for (INSTRUCTION& instruction : instructions) {
@@ -161,7 +165,7 @@ int Simulator::checkAndCountAlgorithmActions(vector<Container>& containersAwaiti
 
             if (checkLoadInstruction(x1, y1, floor1, *container, algorithmErrorString) == ERROR)
                 return ERROR;
-
+	containersAwaitingAtPort.erase(find(containersAwaitingAtPort.begin(), containersAwaitingAtPort.end(), *container));
             continue;
         }
         else if (instructionType == 'U'){
@@ -237,7 +241,6 @@ int Simulator::startTravel (AbstractAlgorithm* algorithm, const string& algName,
         // algorithm is reading the input and making actions on his ship plan
         //Errors here will be written in the same func of the next step
         errors |= algorithm->getInstructionsForCargo(inputFileName, outputFileName);
-
         int status = checkAndCountAlgorithmActions(containersAwaitingAtPort, outputFileName, port.getPortId(), algorithmErrorString);
 
         if (status == VALID)

@@ -50,5 +50,7 @@ public:
 
     void setLocation(int x, int y, int floor);
 
+    bool operator==(const Container& container2) const{ return id == container2.getId();}
+
     friend std::ostream& operator<<(std::ostream& out, const Container& container);
 };

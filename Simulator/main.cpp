@@ -131,7 +131,10 @@ int main(int argc, char** argv) {
             int errorsOfAlgorithm = 0;
             errorsOfAlgorithm |= alg->readShipPlan(travel.getShipPlanPath().string());
             errorsOfAlgorithm |= alg->readShipRoute(travel.getShipRoutePath().string());
-            if (errorsOfAlgorithm != 0) continue;
+            if ((CANNOTRUNTRAVEL & errorsOfAlgorithm) != 0) {
+                simulator.makeTravelError(errorsOfAlgorithm, output, algoTuple, numErrors);
+                continue;
+            }
 
             string algorithmErrorString;
             errorsOfAlgorithm |= simulator.startTravel(alg.get(), algorithm.first, travel, algorithmErrorString, output);

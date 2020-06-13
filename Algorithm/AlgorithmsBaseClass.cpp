@@ -94,4 +94,5 @@ void AlgorithmsBaseClass::loadToShip(Container& container, vector<INSTRUCTION>& 
             }
         }
     }
+    instructions.emplace_back('R', container.getId(), NOT_IN_ROUTE, NOT_IN_ROUTE, NOT_IN_ROUTE, -1, -1, -1);
 }
